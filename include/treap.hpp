@@ -45,6 +45,8 @@ public:
     void clear();
     void insert(const T &value);
     void remove(const T &value);
+    std::shared_ptr<T> select_by_value(const T &value);
+    std::shared_ptr<T> select_by_index(size_t index);
     T &min();
     T &max();
 };
@@ -177,6 +179,22 @@ void Treap<T>::remove(const T &value)
 {
     auto [left, middle, right] = split_by_value(root, value);
     root = merge(left, right);
+}
+
+template <typename T>
+std::shared_ptr<T> Treap<T>::select_by_value(const T &value)
+{
+    auto [left, middle, right] = split_by_value(root, value);
+    root = merge(merge(left, middle), right);
+    return middle ? std::make_shared<T>(middle->value) : nullptr;
+}
+
+template <typename T>
+std::shared_ptr<T> Treap<T>::select_by_index(size_t index)
+{
+    auto [left, middle, right] = split_by_index(root, index);
+    root = merge(merge(left, middle), right);
+    return middle ? std::make_shared<T>(middle->value) : nullptr;
 }
 
 template <typename T>
