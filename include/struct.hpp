@@ -18,7 +18,7 @@ struct Limit
 {
     const Side side;
     const uint64_t price;
-    const uint64_t quantity;
+    uint64_t quantity;
     DoubleLinkedList<Order> orders;
 
     Limit(uint64_t price, Side side) : side(side), price(price), quantity(0) {}
@@ -31,7 +31,7 @@ struct Order
 {
     const uint64_t uid;
     const uint64_t price;
-    const uint64_t quantity;
+    uint64_t quantity;
     std::weak_ptr<Limit> limit;
 
     Order(uint64_t uid, uint64_t price, uint64_t quantity) : uid(uid), price(price), quantity(quantity) {}
