@@ -25,7 +25,7 @@ public:
     void write_best_price_order(const Quote &quote);
     void write_cancel_order(const Quote &quote);
     void write_fill_order(const Quote &quote);
-    void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity);
+    void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price = 0);
     void match();
 
     void show();
@@ -133,11 +133,12 @@ void LimitOrderBook::write_fill_order(const Quote &quote)
         limits->remove(*limit);
 }
 
-void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity)
+void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price)
 {
     auto ask_order = uid_order_map[ask_uid];
     auto bid_order = uid_order_map[bid_uid];
-    uint64_t price = ask_uid < bid_uid ? ask_order->price : bid_order->price;
+    if (price == 0)
+        price = ask_uid < bid_uid ? ask_order->price : bid_order->price;
     uint64_t timestamp = std::max(ask_order->timestamp, bid_order->timestamp);
     write_fill_order(Quote(ask_uid, price, quantity, timestamp, Ask, FillOrder));
     write_fill_order(Quote(bid_uid, price, quantity, timestamp, Bid, FillOrder));
