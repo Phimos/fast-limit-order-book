@@ -12,25 +12,7 @@ enum Side : bool
     Ask = true
 };
 
-struct Order;
-
-struct Limit
-{
-    const Side side;
-    const uint64_t price;
-    uint64_t quantity;
-    DoubleLinkedList<Order> orders;
-
-    Limit(uint64_t price, Side side) : side(side), price(price), quantity(0) {}
-    bool operator<(const Limit &other) const { return std::make_pair(side, price) < std::make_pair(other.side, other.price); }
-    bool operator==(const Limit &other) const { return std::make_pair(side, price) == std::make_pair(other.side, other.price); }
-    bool operator>(const Limit &other) const { return std::make_pair(side, price) > std::make_pair(other.side, other.price); }
-    friend std::ostream &operator<<(std::ostream &os, const Limit &limit)
-    {
-        os << "Limit(" << (limit.side == Bid ? "Bid" : "Ask") << ", " << limit.price << ", " << limit.quantity << ")";
-        return os;
-    }
-};
+struct Limit;
 
 struct Order
 {
@@ -40,6 +22,30 @@ struct Order
     std::weak_ptr<Limit> limit;
 
     Order(uint64_t uid, uint64_t price, uint64_t quantity) : uid(uid), price(price), quantity(quantity) {}
+};
+
+struct Limit : public std::enable_shared_from_this<Limit>
+{
+    const Side side;
+    const uint64_t price;
+    uint64_t quantity;
+    DoubleLinkedList<std::shared_ptr<Order>> orders;
+
+    Limit(uint64_t price, Side side) : side(side), price(price), quantity(0) {}
+    bool operator<(const Limit &other) const { return std::make_pair(side, price) < std::make_pair(other.side, other.price); }
+    bool operator==(const Limit &other) const { return std::make_pair(side, price) == std::make_pair(other.side, other.price); }
+    bool operator>(const Limit &other) const { return std::make_pair(side, price) > std::make_pair(other.side, other.price); }
+    void insert(std::shared_ptr<Order> &order)
+    {
+        orders.push_back(order);
+        quantity += order->quantity;
+        order->limit = weak_from_this();
+    }
+    friend std::ostream &operator<<(std::ostream &os, const Limit &limit)
+    {
+        os << "Limit(" << (limit.side == Bid ? "Bid" : "Ask") << ", " << limit.price << ", " << limit.quantity << ")";
+        return os;
+    }
 };
 
 enum QuoteType

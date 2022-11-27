@@ -8,15 +8,18 @@
 template <typename T>
 struct Node
 {
-    T value;
+    std::shared_ptr<T> value_ptr;
     size_t size;
     size_t priority;
     std::shared_ptr<Node<T>> left, right;
     std::weak_ptr<Node<T>> parent;
 
-    Node(T value) : value(value), size(1), priority(rand()) {}
-    Node(T value, Node<T> *parent) : value(value), parent(parent), size(1), priority(rand()) {}
+    Node(std::shared_ptr<T> value_ptr) : value_ptr(value_ptr), size(1), priority(rand()) {}
+    Node(T value) : value_ptr(std::make_shared<T>(value)), size(1), priority(rand()) {}
+    Node(std::shared_ptr<T> value_ptr, Node<T> *parent) : value_ptr(value_ptr), parent(parent), size(1), priority(rand()) {}
+    Node(T value, Node<T> *parent) : value_ptr(std::make_shared<T>(value), parent), size(1), priority(rand()) {}
     void update();
+    T &value() { return *value_ptr; }
 };
 
 template <typename T>
@@ -45,9 +48,10 @@ public:
     void clear();
     bool empty();
     void insert(const T &value);
+    void insert(std::shared_ptr<T> value_ptr);
     void remove(const T &value);
-    std::shared_ptr<T> select_by_value(const T &value);
-    std::shared_ptr<T> select_by_index(size_t index);
+    std::shared_ptr<Node<T>> select_by_value(const T &value);
+    std::shared_ptr<Node<T>> select_by_index(size_t index);
     T &min();
     T &max();
 };
@@ -57,7 +61,7 @@ std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<N
 {
     if (!node)
         return std::make_tuple(nullptr, nullptr, nullptr);
-    if (node->value < value)
+    if (node->value() < value)
     {
         auto [left, middle, right] = split_by_value(node->right, value);
         node->right = left;
@@ -66,7 +70,7 @@ std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<N
         node->update();
         return std::make_tuple(node, middle, right);
     }
-    else if (value < node->value)
+    else if (value < node->value())
     {
         auto [left, middle, right] = split_by_value(node->left, value);
         node->left = right;
@@ -167,10 +171,16 @@ bool Treap<T>::empty()
 template <typename T>
 void Treap<T>::insert(const T &value)
 {
-    auto [left, middle, right] = split_by_value(root, value);
+    insert(std::make_shared<T>(value));
+}
+
+template <typename T>
+void Treap<T>::insert(std::shared_ptr<T> value_ptr)
+{
+    auto [left, middle, right] = split_by_value(root, *value_ptr);
     if (middle)
         return;
-    std::shared_ptr<Node<T>> node = std::make_shared<Node<T>>(value);
+    std::shared_ptr<Node<T>> node = std::make_shared<Node<T>>(value_ptr);
     if (left)
         left->parent = node;
     if (right)
@@ -189,19 +199,19 @@ void Treap<T>::remove(const T &value)
 }
 
 template <typename T>
-std::shared_ptr<T> Treap<T>::select_by_value(const T &value)
+std::shared_ptr<Node<T>> Treap<T>::select_by_value(const T &value)
 {
     auto [left, middle, right] = split_by_value(root, value);
     root = merge(merge(left, middle), right);
-    return middle ? std::make_shared<T>(middle->value) : nullptr;
+    return middle;
 }
 
 template <typename T>
-std::shared_ptr<T> Treap<T>::select_by_index(size_t index)
+std::shared_ptr<Node<T>> Treap<T>::select_by_index(size_t index)
 {
     auto [left, middle, right] = split_by_index(root, index);
     root = merge(merge(left, middle), right);
-    return middle ? std::make_shared<T>(middle->value) : nullptr;
+    return middle;
 }
 
 template <typename T>
@@ -210,7 +220,7 @@ T &Treap<T>::min()
     std::shared_ptr<Node<T>> node = root;
     while (node->left)
         node = node->left;
-    return node->value;
+    return node->value();
 }
 
 template <typename T>
@@ -219,7 +229,7 @@ T &Treap<T>::max()
     std::shared_ptr<Node<T>> node = root;
     while (node->right)
         node = node->right;
-    return node->value;
+    return node->value();
 }
 
 template <typename T>
@@ -237,7 +247,7 @@ std::ostream &operator<<(std::ostream &os, const Treap<T> &treap)
         node = stack.top();
 
         stack.pop();
-        os << node->value << " ";
+        os << node->value() << " ";
         node = node->right;
     }
     return os;
