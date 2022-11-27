@@ -77,7 +77,8 @@ void LimitOrderBook::write_limit_order(const Quote &quote)
         price_map[quote.price] = limit;
     }
     limit->insert(order);
-    std::cout << limit->quantity << std::endl;
+    if (status == TradingStatus::ContinuousTrading)
+        match();
 }
 
 void LimitOrderBook::write_market_order(const Quote &quote)
@@ -138,7 +139,6 @@ void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity
     auto bid_order = uid_order_map[bid_uid];
     uint64_t price = ask_uid < bid_uid ? ask_order->price : bid_order->price;
     uint64_t timestamp = std::max(ask_order->timestamp, bid_order->timestamp);
-    std::cout << "Trade " << ask_uid << " " << bid_uid << " " << quantity << " " << price << " " << timestamp << std::endl;
     write_fill_order(Quote(ask_uid, price, quantity, timestamp, Ask, FillOrder));
     write_fill_order(Quote(bid_uid, price, quantity, timestamp, Bid, FillOrder));
 }
