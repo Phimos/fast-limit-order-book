@@ -26,6 +26,7 @@ public:
     void write_cancel_order(const Quote &quote);
     void write_fill_order(const Quote &quote);
     void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity);
+    void match();
 
     void show();
 };
@@ -137,8 +138,22 @@ void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity
     auto bid_order = uid_order_map[bid_uid];
     uint64_t price = ask_uid < bid_uid ? ask_order->price : bid_order->price;
     uint64_t timestamp = std::max(ask_order->timestamp, bid_order->timestamp);
+    std::cout << "Trade " << ask_uid << " " << bid_uid << " " << quantity << " " << price << " " << timestamp << std::endl;
     write_fill_order(Quote(ask_uid, price, quantity, timestamp, Ask, FillOrder));
     write_fill_order(Quote(bid_uid, price, quantity, timestamp, Bid, FillOrder));
+}
+
+void LimitOrderBook::match()
+{
+    while (!ask_limits->empty() && !bid_limits->empty() && ask_limits->min().price <= bid_limits->max().price)
+    {
+        Limit &ask_limit = ask_limits->min();
+        Limit &bid_limit = bid_limits->max();
+        std::shared_ptr<Order> &ask_order = ask_limit.orders.front();
+        std::shared_ptr<Order> &bid_order = bid_limit.orders.front();
+        uint64_t quantity = std::min(ask_order->quantity, bid_order->quantity);
+        trade(ask_order->uid, bid_order->uid, quantity);
+    }
 }
 
 void LimitOrderBook::show()
