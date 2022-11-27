@@ -43,6 +43,7 @@ private:
 public:
     Treap() : root(nullptr) {}
     void clear();
+    bool empty();
     void insert(const T &value);
     void remove(const T &value);
     std::shared_ptr<T> select_by_value(const T &value);
@@ -155,6 +156,12 @@ template <typename T>
 void Treap<T>::clear()
 {
     root = nullptr;
+}
+
+template <typename T>
+bool Treap<T>::empty()
+{
+    return !root;
 }
 
 template <typename T>
