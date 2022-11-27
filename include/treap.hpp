@@ -44,6 +44,8 @@ public:
     Treap() : root(nullptr) {}
     void insert(const T &value);
     void remove(const T &value);
+    T &min();
+    T &max();
 };
 
 template <typename T>
@@ -168,6 +170,24 @@ void Treap<T>::remove(const T &value)
 {
     auto [left, middle, right] = split_by_value(root, value);
     root = merge(left, right);
+}
+
+template <typename T>
+T &Treap<T>::min()
+{
+    std::shared_ptr<Node<T>> node = root;
+    while (node->left)
+        node = node->left;
+    return node->value;
+}
+
+template <typename T>
+T &Treap<T>::max()
+{
+    std::shared_ptr<Node<T>> node = root;
+    while (node->right)
+        node = node->right;
+    return node->value;
 }
 
 template <typename T>
