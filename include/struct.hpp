@@ -53,7 +53,8 @@ enum QuoteType
     LimitOrder,
     MarketOrder,
     BestPriceOrder,
-    CancelOrder
+    CancelOrder,
+    FillOrder
 };
 
 struct Quote

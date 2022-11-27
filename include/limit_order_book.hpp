@@ -24,6 +24,7 @@ public:
     void write_market_order(const Quote &quote);
     void write_best_price_order(const Quote &quote);
     void write_cancel_order(const Quote &quote);
+    void write_fill_order(const Quote &quote);
     void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity);
 
     void show();
@@ -51,6 +52,9 @@ void LimitOrderBook::write(const Quote &quote)
         break;
     case CancelOrder:
         write_cancel_order(quote);
+        break;
+    case FillOrder:
+        write_fill_order(quote);
         break;
     }
 }
@@ -99,12 +103,29 @@ void LimitOrderBook::write_cancel_order(const Quote &quote)
     auto limits = quote.side == Bid ? bid_limits : ask_limits;
     auto order = uid_order_map[quote.uid];
     auto limit = order->limit.lock();
-    std::cout << uid_order_map.size() << std::endl;
-    assert(limit != nullptr);
-    limit->quantity -= order->quantity;
-    order->quantity = 0;
-    uid_order_map.erase(quote.uid);
-    if (limit->orders.front()->uid == quote.uid)
+    assert(limit);
+    limit->quantity -= quote.quantity;
+    order->quantity -= quote.quantity;
+    if (order->quantity == 0)
+        uid_order_map.erase(quote.uid);
+    while (!limit->orders.empty() && limit->orders.front()->quantity == 0)
+        limit->orders.pop_front();
+    if (limit->quantity == 0)
+        limits->remove(*limit);
+}
+
+void LimitOrderBook::write_fill_order(const Quote &quote)
+{
+    assert(quote.type == FillOrder);
+    auto limits = quote.side == Bid ? bid_limits : ask_limits;
+    auto order = uid_order_map[quote.uid];
+    auto limit = order->limit.lock();
+    assert(limit);
+    limit->quantity -= quote.quantity;
+    order->quantity -= quote.quantity;
+    if (order->quantity == 0)
+        uid_order_map.erase(quote.uid);
+    while (!limit->orders.empty() && limit->orders.front()->quantity == 0)
         limit->orders.pop_front();
     if (limit->quantity == 0)
         limits->remove(*limit);
