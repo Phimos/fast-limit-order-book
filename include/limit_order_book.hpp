@@ -21,6 +21,7 @@ public:
     void write(const Quote &quote);
     void write_limit_order(const Quote &quote);
     void write_market_order(const Quote &quote);
+    void write_best_price_order(const Quote &quote);
     void write_cancel_order(const Quote &quote);
 
     void show();
@@ -42,6 +43,9 @@ void LimitOrderBook::write(const Quote &quote)
         break;
     case MarketOrder:
         write_market_order(quote);
+        break;
+    case BestPriceOrder:
+        write_best_price_order(quote);
         break;
     case CancelOrder:
         write_cancel_order(quote);
@@ -72,10 +76,18 @@ void LimitOrderBook::write_limit_order(const Quote &quote)
 void LimitOrderBook::write_market_order(const Quote &quote)
 {
     assert(quote.type == MarketOrder);
-    auto limits = quote.side == Bid ? bid_limits : ask_limits;
     if ((quote.side == Bid && ask_limits->empty()) || (quote.side == Ask && bid_limits->empty()))
         return;
     uint64_t price = quote.side == Bid ? ask_limits->min().price : bid_limits->max().price;
+    write_limit_order(Quote(quote.uid, price, quote.quantity, quote.timestamp, quote.side, LimitOrder));
+}
+
+void LimitOrderBook::write_best_price_order(const Quote &quote)
+{
+    assert(quote.type == BestPriceOrder);
+    if ((quote.side == Bid && bid_limits->empty()) || (quote.side == Ask && ask_limits->empty()))
+        return;
+    uint64_t price = quote.side == Bid ? bid_limits->max().price : ask_limits->min().price;
     write_limit_order(Quote(quote.uid, price, quote.quantity, quote.timestamp, quote.side, LimitOrder));
 }
 

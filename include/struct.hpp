@@ -52,6 +52,7 @@ enum QuoteType
 {
     LimitOrder,
     MarketOrder,
+    BestPriceOrder,
     CancelOrder
 };
 
