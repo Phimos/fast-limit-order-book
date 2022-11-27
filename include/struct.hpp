@@ -37,4 +37,23 @@ struct Order
     Order(uint64_t uid, uint64_t price, uint64_t quantity) : uid(uid), price(price), quantity(quantity) {}
 };
 
+enum QuoteType
+{
+    LimitOrder,
+    MarketOrder,
+    CancelOrder
+};
+
+struct Quote
+{
+    const uint64_t uid;
+    const uint64_t price;
+    const uint64_t quantity;
+    const uint64_t timestamp;
+    const Side side;
+    const QuoteType type;
+
+    Quote(uint64_t uid, uint64_t price, uint64_t quantity, uint64_t timestamp, Side side, QuoteType type) : uid(uid), price(price), quantity(quantity), timestamp(timestamp), side(side), type(type) {}
+};
+
 #endif // __STRUCT_HPP__
