@@ -25,6 +25,11 @@ struct Limit
     bool operator<(const Limit &other) const { return std::make_pair(side, price) < std::make_pair(other.side, other.price); }
     bool operator==(const Limit &other) const { return std::make_pair(side, price) == std::make_pair(other.side, other.price); }
     bool operator>(const Limit &other) const { return std::make_pair(side, price) > std::make_pair(other.side, other.price); }
+    friend std::ostream &operator<<(std::ostream &os, const Limit &limit)
+    {
+        os << "Limit(" << (limit.side == Bid ? "Bid" : "Ask") << ", " << limit.price << ", " << limit.quantity << ")";
+        return os;
+    }
 };
 
 struct Order
