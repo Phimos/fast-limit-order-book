@@ -56,10 +56,9 @@ void LimitOrderBook::write_limit_order(const Quote &quote)
     auto order = std::make_shared<Order>(quote.uid, quote.price, quote.quantity);
     assert(uid_order_map.find(quote.uid) == uid_order_map.end());
     uid_order_map[quote.uid] = order;
-    auto limits = quote.side == Bid ? bid_limits : ask_limits;
+    std::shared_ptr<Treap<Limit>> &limits = quote.side == Bid ? bid_limits : ask_limits;
     std::unordered_map<uint64_t, std::shared_ptr<Limit>> &price_map = quote.side == Bid ? bid_price_map : ask_price_map;
     auto limit = price_map[quote.price];
-    // auto limit = limits->select_by_value(Limit(quote.price, quote.side));
     if (!limit)
     {
         limit = std::make_shared<Limit>(quote.price, quote.side);
