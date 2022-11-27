@@ -11,6 +11,7 @@
 
 class LimitOrderBook
 {
+    TradingStatus status = TradingStatus::ContinuousTrading;
     std::shared_ptr<Treap<Limit>> bid_limits, ask_limits;
     std::unordered_map<uint64_t, std::shared_ptr<Limit>> bid_price_map, ask_price_map;
     std::unordered_map<uint64_t, std::shared_ptr<Order>> uid_order_map;
@@ -23,6 +24,7 @@ public:
     void write_market_order(const Quote &quote);
     void write_best_price_order(const Quote &quote);
     void write_cancel_order(const Quote &quote);
+    void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity);
 
     void show();
 };
@@ -106,6 +108,18 @@ void LimitOrderBook::write_cancel_order(const Quote &quote)
         limit->orders.pop_front();
     if (limit->quantity == 0)
         limits->remove(*limit);
+}
+
+void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity)
+{
+    auto ask_order = uid_order_map[ask_uid];
+    auto bid_order = uid_order_map[bid_uid];
+    auto ask_limit = ask_order->limit.lock();
+    auto bid_limit = bid_order->limit.lock();
+    ask_order->quantity -= quantity;
+    bid_order->quantity -= quantity;
+    ask_limit->quantity -= quantity;
+    bid_limit->quantity -= quantity;
 }
 
 void LimitOrderBook::show()
