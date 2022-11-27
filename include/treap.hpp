@@ -42,6 +42,7 @@ private:
 
 public:
     Treap() : root(nullptr) {}
+    void clear();
     void insert(const T &value);
     void remove(const T &value);
     T &min();
@@ -146,6 +147,12 @@ std::shared_ptr<Node<T>> Treap<T>::merge(std::shared_ptr<Node<T>> left, std::sha
         right->update();
         return right;
     }
+}
+
+template <typename T>
+void Treap<T>::clear()
+{
+    root = nullptr;
 }
 
 template <typename T>
