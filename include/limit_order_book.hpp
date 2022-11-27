@@ -63,7 +63,7 @@ void LimitOrderBook::write_limit_order(const Quote &quote)
 {
     assert(quote.type == LimitOrder);
     // create order
-    auto order = std::make_shared<Order>(quote.uid, quote.price, quote.quantity);
+    auto order = std::make_shared<Order>(quote.uid, quote.price, quote.quantity, quote.timestamp);
     assert(uid_order_map.find(quote.uid) == uid_order_map.end());
     uid_order_map[quote.uid] = order;
     std::shared_ptr<Treap<Limit>> &limits = quote.side == Bid ? bid_limits : ask_limits;
@@ -135,12 +135,10 @@ void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity
 {
     auto ask_order = uid_order_map[ask_uid];
     auto bid_order = uid_order_map[bid_uid];
-    auto ask_limit = ask_order->limit.lock();
-    auto bid_limit = bid_order->limit.lock();
-    ask_order->quantity -= quantity;
-    bid_order->quantity -= quantity;
-    ask_limit->quantity -= quantity;
-    bid_limit->quantity -= quantity;
+    uint64_t price = ask_uid < bid_uid ? ask_order->price : bid_order->price;
+    uint64_t timestamp = std::max(ask_order->timestamp, bid_order->timestamp);
+    write_fill_order(Quote(ask_uid, price, quantity, timestamp, Ask, FillOrder));
+    write_fill_order(Quote(bid_uid, price, quantity, timestamp, Bid, FillOrder));
 }
 
 void LimitOrderBook::show()

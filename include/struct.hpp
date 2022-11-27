@@ -19,9 +19,10 @@ struct Order
     const uint64_t uid;
     const uint64_t price;
     uint64_t quantity;
+    const uint64_t timestamp;
     std::weak_ptr<Limit> limit;
 
-    Order(uint64_t uid, uint64_t price, uint64_t quantity) : uid(uid), price(price), quantity(quantity) {}
+    Order(uint64_t uid, uint64_t price, uint64_t quantity, uint64_t timestamp) : uid(uid), price(price), quantity(quantity), timestamp(timestamp) {}
 };
 
 struct Limit : public std::enable_shared_from_this<Limit>
