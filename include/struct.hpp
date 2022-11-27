@@ -72,6 +72,6 @@ enum TradingStatus
 {
     CallAuction,
     ContinuousTrading,
-}
+};
 
 #endif // __STRUCT_HPP__
