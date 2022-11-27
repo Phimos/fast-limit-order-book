@@ -17,10 +17,10 @@ struct ListNode
 template <typename T>
 class DoubleLinkedList
 {
-    std::shared_ptr<ListNode<T>> head, tail;
 
 public:
     size_t size;
+    std::shared_ptr<ListNode<T>> head, tail;
     DoubleLinkedList() : head(nullptr), tail(nullptr), size(0) {}
     void push_back(const T &value);
     void push_front(const T &value);
@@ -28,7 +28,6 @@ public:
     T pop_front();
     T &front();
     T &back();
-    void show();
 };
 
 template <typename T>
@@ -126,15 +125,15 @@ T &DoubleLinkedList<T>::back()
 }
 
 template <typename T>
-void DoubleLinkedList<T>::show()
+std::ostream &operator<<(std::ostream &os, const DoubleLinkedList<T> &list)
 {
-    std::shared_ptr<ListNode<T>> current = head;
+    std::shared_ptr<ListNode<T>> current = list.head;
     while (current)
     {
-        std::cout << current->value << " ";
+        os << current->value << " ";
         current = current->next;
     }
-    std::cout << std::endl;
+    return os;
 }
 
 #endif // __DOUBLE_LINKED_LIST_HPP__
