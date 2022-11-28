@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <vector>
+#include <string>
 
 class LimitOrderBook
 {
@@ -37,7 +38,12 @@ public:
     void write_cancel_order(const Quote &quote);
     void write_fill_order(const Quote &quote);
     void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price = 0);
+
+    void set_status(TradingStatus status) { this->status = status; }
+    void set_status(const std::string &status);
+
     void match();
+    void match_call_auction();
 
     void show();
 };
@@ -47,6 +53,15 @@ void LimitOrderBook::clear()
     bid_limits->clear();
     ask_limits->clear();
     uid_order_map.clear();
+}
+
+void LimitOrderBook::set_status(const std::string &status)
+{
+    assert(status == "CallAuction" || status == "ContinuousTrading");
+    if (status == "CallAuction")
+        this->status = TradingStatus::CallAuction;
+    else
+        this->status = TradingStatus::ContinuousTrading;
 }
 
 void LimitOrderBook::write(const Quote &quote)
@@ -190,6 +205,29 @@ void LimitOrderBook::match()
         uint64_t quantity = std::min(ask_order->quantity, bid_order->quantity);
         trade(ask_order->uid, bid_order->uid, quantity);
     }
+}
+
+void LimitOrderBook::match_call_auction()
+{
+    uint64_t ref_price;
+    uint64_t ask_cum_quantity = 0, bid_cum_quantity = 0;
+    std::shared_ptr<Node<Limit>> ask_node, bid_node;
+    ask_node = ask_limits->min();
+    bid_node = bid_limits->max();
+    while (ask_node && bid_node && ask_node->value().price < bid_node->value().price)
+    {
+        if (ask_cum_quantity < bid_cum_quantity)
+        {
+            ask_cum_quantity += ask_node->value().quantity;
+            ask_node = ask_node->next();
+        }
+        else
+        {
+            bid_cum_quantity += bid_node->value().quantity;
+            bid_node = bid_node->prev();
+        }
+    }
+    ref_price = ask_node ? ask_node->value().price : bid_node->value().price;
 }
 
 void LimitOrderBook::show() // TODO: better show function

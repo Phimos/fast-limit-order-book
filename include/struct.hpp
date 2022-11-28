@@ -86,6 +86,8 @@ struct Node<Limit>
         }
     }
     Limit &value() { return *value_ptr; }
+    std::shared_ptr<Node<Limit>> prev();
+    std::shared_ptr<Node<Limit>> next();
 };
 
 enum QuoteType
