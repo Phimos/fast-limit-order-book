@@ -15,6 +15,14 @@ PYBIND11_MODULE(flob, m)
         .def("clear", &LimitOrderBook::clear)
         .def("show", &LimitOrderBook::show);
 
+    py::enum_<QuoteType>(m, "QuoteType")
+        .value("LimitOrder", QuoteType::LimitOrder)
+        .value("MarketOrder", QuoteType::MarketOrder)
+        .value("BestPriceOrder", QuoteType::BestPriceOrder)
+        .value("CancelOrder", QuoteType::CancelOrder)
+        .value("FillOrder", QuoteType::FillOrder)
+        .export_values();
+
     py::enum_<TradingStatus>(m, "TradingStatus")
         .value("CallAuction", TradingStatus::CallAuction)
         .value("ContinuousTrading", TradingStatus::ContinuousTrading)
