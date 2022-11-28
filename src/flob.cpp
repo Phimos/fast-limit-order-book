@@ -13,7 +13,19 @@ PYBIND11_MODULE(flob, m)
     py::class_<LimitOrderBook>(m, "LimitOrderBook")
         .def(py::init<size_t>(), py::arg("decimal_places") = 2)
         .def("clear", &LimitOrderBook::clear)
+        .def("write", &LimitOrderBook::write, py::arg("quote"))
         .def("show", &LimitOrderBook::show);
+
+    py::class_<Quote>(m, "Quote")
+        .def(py::init<uint64_t, uint64_t, uint64_t, uint64_t, Side, QuoteType>(),
+             py::arg("uid"), py::arg("price"), py::arg("quantity"),
+             py::arg("timestamp"), py::arg("side"), py::arg("type"))
+        .def_readonly("uid", &Quote::uid)
+        .def_readonly("price", &Quote::price)
+        .def_readonly("quantity", &Quote::quantity)
+        .def_readonly("timestamp", &Quote::timestamp)
+        .def_readonly("side", &Quote::side)
+        .def_readonly("type", &Quote::type);
 
     py::enum_<QuoteType>(m, "QuoteType")
         .value("LimitOrder", QuoteType::LimitOrder)
