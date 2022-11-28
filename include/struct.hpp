@@ -52,7 +52,7 @@ struct Limit : public std::enable_shared_from_this<Limit>
 };
 
 template <>
-struct Node<Limit>
+struct Node<Limit> : std::enable_shared_from_this<Node<Limit>>
 {
     std::shared_ptr<Limit> value_ptr;
     size_t size;
@@ -89,6 +89,44 @@ struct Node<Limit>
     std::shared_ptr<Node<Limit>> prev();
     std::shared_ptr<Node<Limit>> next();
 };
+
+std::shared_ptr<Node<Limit>> Node<Limit>::prev()
+{
+    std::shared_ptr<Node<Limit>> node;
+    if (left)
+    {
+        node = left;
+        while (node->right)
+            node = node->right;
+        return node;
+    }
+    else
+    {
+        node = this->shared_from_this();
+        while (node->parent.lock() && node->parent.lock()->left == node)
+            node = node->parent.lock();
+        return node->parent.lock();
+    }
+}
+
+std::shared_ptr<Node<Limit>> Node<Limit>::next()
+{
+    std::shared_ptr<Node<Limit>> node;
+    if (right)
+    {
+        node = right;
+        while (node->left)
+            node = node->left;
+        return node;
+    }
+    else
+    {
+        node = this->shared_from_this();
+        while (node->parent.lock() && node->parent.lock()->right == node)
+            node = node->parent.lock();
+        return node->parent.lock();
+    }
+}
 
 enum QuoteType
 {
