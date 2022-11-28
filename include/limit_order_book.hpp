@@ -13,6 +13,7 @@
 class LimitOrderBook
 {
     TradingStatus status = TradingStatus::ContinuousTrading;
+    size_t decimal_places; // TODO: use this to round prices (and quantities) (double <-> int64_t)
 
     std::shared_ptr<Treap<Limit>> bid_limits, ask_limits;
     std::shared_ptr<Limit> bid_best_limit, ask_best_limit; // TODO: get best limit in O(1) time
@@ -22,8 +23,9 @@ class LimitOrderBook
     std::unordered_map<uint64_t, std::shared_ptr<Order>> call_auction_orders;
 
 public:
-    LimitOrderBook()
-        : bid_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
+    LimitOrderBook(size_t decimal_places = 2)
+        : decimal_places(decimal_places),
+          bid_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           ask_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           bid_best_limit(nullptr),
           ask_best_limit(nullptr) {}
