@@ -9,12 +9,14 @@
 #include <unordered_map>
 #include <iostream>
 #include <vector>
+#include <cmath>
 #include <string>
 
 class LimitOrderBook
 {
     TradingStatus status = TradingStatus::ContinuousTrading;
-    size_t decimal_places; // TODO: use this to round prices (and quantities) (double <-> int64_t)
+    size_t decimal_places;
+    double scale_up, scale_down;
 
     std::shared_ptr<Treap<Limit>> bid_limits, ask_limits;
     std::shared_ptr<Limit> bid_best_limit, ask_best_limit; // TODO: get best limit in O(1) time
@@ -23,20 +25,26 @@ class LimitOrderBook
 
     std::unordered_map<uint64_t, std::shared_ptr<Order>> call_auction_orders;
 
+    void write_limit_order(const Quote &quote);
+    void write_market_order(const Quote &quote);
+    void write_best_price_order(const Quote &quote);
+    void write_cancel_order(const Quote &quote);
+    void write_fill_order(const Quote &quote);
+
+    inline uint64_t double2int(double value) { return (uint64_t)(value * scale_up); }
+    inline double int2double(uint64_t value) { return (double)value * scale_down; }
+
 public:
     LimitOrderBook(size_t decimal_places = 2)
         : decimal_places(decimal_places),
+          scale_up(std::pow(10, decimal_places)),
+          scale_down(std::pow(10, -decimal_places)),
           bid_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           ask_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           bid_best_limit(nullptr),
           ask_best_limit(nullptr) {}
     void clear();
     void write(const Quote &quote);
-    void write_limit_order(const Quote &quote);
-    void write_market_order(const Quote &quote);
-    void write_best_price_order(const Quote &quote);
-    void write_cancel_order(const Quote &quote);
-    void write_fill_order(const Quote &quote);
     void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price = 0);
 
     void set_status(TradingStatus status) { this->status = status; }
