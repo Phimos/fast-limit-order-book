@@ -91,8 +91,8 @@ public:
     void remove(const T &value);
     std::shared_ptr<Node<T>> select_by_value(const T &value);
     std::shared_ptr<Node<T>> select_by_index(size_t index);
-    T &min();
-    T &max();
+    std::shared_ptr<Node<T>> min();
+    std::shared_ptr<Node<T>> max();
 };
 
 template <typename T>
@@ -257,21 +257,21 @@ std::shared_ptr<Node<T>> Treap<T>::select_by_index(size_t index)
 }
 
 template <typename T>
-T &Treap<T>::min()
+std::shared_ptr<Node<T>> Treap<T>::min()
 {
     std::shared_ptr<Node<T>> node = root;
     while (node->left)
         node = node->left;
-    return node->value();
+    return node;
 }
 
 template <typename T>
-T &Treap<T>::max()
+std::shared_ptr<Node<T>> Treap<T>::max()
 {
     std::shared_ptr<Node<T>> node = root;
     while (node->right)
         node = node->right;
-    return node->value();
+    return node;
 }
 
 template <typename T>

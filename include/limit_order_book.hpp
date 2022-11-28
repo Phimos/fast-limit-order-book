@@ -113,7 +113,7 @@ void LimitOrderBook::write_market_order(const Quote &quote)
     assert(quote.type == QuoteType::MarketOrder);
     if ((quote.side == Side::Bid && ask_limits->empty()) || (quote.side == Side::Ask && bid_limits->empty()))
         return;
-    uint64_t price = quote.side == Side::Bid ? ask_limits->min().price : bid_limits->max().price;
+    uint64_t price = quote.side == Side::Bid ? ask_limits->min()->value().price : bid_limits->max()->value().price;
     write_limit_order(Quote(quote.uid, price, quote.quantity, quote.timestamp, quote.side, LimitOrder));
 }
 
@@ -122,7 +122,7 @@ void LimitOrderBook::write_best_price_order(const Quote &quote)
     assert(quote.type == QuoteType::BestPriceOrder);
     if ((quote.side == Side::Bid && bid_limits->empty()) || (quote.side == Side::Ask && ask_limits->empty()))
         return;
-    uint64_t price = quote.side == Side::Bid ? bid_limits->max().price : ask_limits->min().price;
+    uint64_t price = quote.side == Side::Bid ? bid_limits->max()->value().price : ask_limits->min()->value().price;
     write_limit_order(Quote(quote.uid, price, quote.quantity, quote.timestamp, quote.side, LimitOrder));
 }
 
@@ -181,10 +181,10 @@ void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity
 
 void LimitOrderBook::match()
 {
-    while (!ask_limits->empty() && !bid_limits->empty() && ask_limits->min().price <= bid_limits->max().price)
+    while (!ask_limits->empty() && !bid_limits->empty() && ask_limits->min()->value().price <= bid_limits->max()->value().price)
     {
-        Limit &ask_limit = ask_limits->min();
-        Limit &bid_limit = bid_limits->max();
+        Limit &ask_limit = ask_limits->min()->value();
+        Limit &bid_limit = bid_limits->max()->value();
         std::shared_ptr<Order> &ask_order = ask_limit.orders.front();
         std::shared_ptr<Order> &bid_order = bid_limit.orders.front();
         uint64_t quantity = std::min(ask_order->quantity, bid_order->quantity);
