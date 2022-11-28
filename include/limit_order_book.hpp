@@ -15,13 +15,18 @@ class LimitOrderBook
     TradingStatus status = TradingStatus::ContinuousTrading;
 
     std::shared_ptr<Treap<Limit>> bid_limits, ask_limits;
+    std::shared_ptr<Limit> bid_best_limit, ask_best_limit; // TODO: get best limit in O(1) time
     std::unordered_map<uint64_t, std::shared_ptr<Limit>> bid_price_map, ask_price_map;
     std::unordered_map<uint64_t, std::shared_ptr<Order>> uid_order_map;
 
     std::unordered_map<uint64_t, std::shared_ptr<Order>> call_auction_orders;
 
 public:
-    LimitOrderBook() : bid_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())), ask_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())) {}
+    LimitOrderBook()
+        : bid_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
+          ask_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
+          bid_best_limit(nullptr),
+          ask_best_limit(nullptr) {}
     void clear();
     void write(const Quote &quote);
     void write_limit_order(const Quote &quote);
