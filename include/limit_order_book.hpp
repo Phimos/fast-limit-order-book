@@ -44,35 +44,51 @@ void LimitOrderBook::clear()
 
 void LimitOrderBook::write(const Quote &quote)
 {
-    switch (quote.type)
+    switch (status)
     {
-    case LimitOrder:
-        write_limit_order(quote);
+    case TradingStatus::ContinuousTrading:
+        switch (quote.type)
+        {
+        case QuoteType::LimitOrder:
+            write_limit_order(quote);
+            break;
+        case QuoteType::MarketOrder:
+            write_market_order(quote);
+            break;
+        case QuoteType::BestPriceOrder:
+            write_best_price_order(quote);
+            break;
+        case QuoteType::CancelOrder:
+            write_cancel_order(quote);
+            break;
+        case QuoteType::FillOrder:
+            write_fill_order(quote);
+            break;
+        }
         break;
-    case MarketOrder:
-        write_market_order(quote);
-        break;
-    case BestPriceOrder:
-        write_best_price_order(quote);
-        break;
-    case CancelOrder:
-        write_cancel_order(quote);
-        break;
-    case FillOrder:
-        write_fill_order(quote);
-        break;
+    case TradingStatus::CallAuction:
+        // TODO: implement call auction
+        switch (quote.type)
+        {
+        case QuoteType::LimitOrder:
+            break;
+        case QuoteType::CancelOrder:
+            break;
+        case QuoteType::FillOrder:
+            break;
+        }
     }
 }
 
 void LimitOrderBook::write_limit_order(const Quote &quote)
 {
-    assert(quote.type == LimitOrder);
+    assert(quote.type == QuoteType::LimitOrder);
     // create order
     auto order = std::make_shared<Order>(quote.uid, quote.price, quote.quantity, quote.timestamp);
     assert(uid_order_map.find(quote.uid) == uid_order_map.end());
     uid_order_map[quote.uid] = order;
-    std::shared_ptr<Treap<Limit>> &limits = quote.side == Bid ? bid_limits : ask_limits;
-    std::unordered_map<uint64_t, std::shared_ptr<Limit>> &price_map = quote.side == Bid ? bid_price_map : ask_price_map;
+    std::shared_ptr<Treap<Limit>> &limits = quote.side == Side::Bid ? bid_limits : ask_limits;
+    std::unordered_map<uint64_t, std::shared_ptr<Limit>> &price_map = quote.side == Side::Bid ? bid_price_map : ask_price_map;
     auto limit = price_map[quote.price];
     if (!limit)
     {
@@ -87,27 +103,27 @@ void LimitOrderBook::write_limit_order(const Quote &quote)
 
 void LimitOrderBook::write_market_order(const Quote &quote)
 {
-    assert(quote.type == MarketOrder);
-    if ((quote.side == Bid && ask_limits->empty()) || (quote.side == Ask && bid_limits->empty()))
+    assert(quote.type == QuoteType::MarketOrder);
+    if ((quote.side == Side::Bid && ask_limits->empty()) || (quote.side == Side::Ask && bid_limits->empty()))
         return;
-    uint64_t price = quote.side == Bid ? ask_limits->min().price : bid_limits->max().price;
+    uint64_t price = quote.side == Side::Bid ? ask_limits->min().price : bid_limits->max().price;
     write_limit_order(Quote(quote.uid, price, quote.quantity, quote.timestamp, quote.side, LimitOrder));
 }
 
 void LimitOrderBook::write_best_price_order(const Quote &quote)
 {
-    assert(quote.type == BestPriceOrder);
-    if ((quote.side == Bid && bid_limits->empty()) || (quote.side == Ask && ask_limits->empty()))
+    assert(quote.type == QuoteType::BestPriceOrder);
+    if ((quote.side == Side::Bid && bid_limits->empty()) || (quote.side == Side::Ask && ask_limits->empty()))
         return;
-    uint64_t price = quote.side == Bid ? bid_limits->max().price : ask_limits->min().price;
+    uint64_t price = quote.side == Side::Bid ? bid_limits->max().price : ask_limits->min().price;
     write_limit_order(Quote(quote.uid, price, quote.quantity, quote.timestamp, quote.side, LimitOrder));
 }
 
 void LimitOrderBook::write_cancel_order(const Quote &quote)
 {
-    assert(quote.type == CancelOrder);
-    auto limits = quote.side == Bid ? bid_limits : ask_limits;
-    auto price_map = quote.side == Bid ? bid_price_map : ask_price_map;
+    assert(quote.type == QuoteType::CancelOrder);
+    auto limits = quote.side == Side::Bid ? bid_limits : ask_limits;
+    auto price_map = quote.side == Side::Bid ? bid_price_map : ask_price_map;
     auto order = uid_order_map[quote.uid];
     auto limit = order->limit.lock();
     assert(limit);
@@ -126,9 +142,9 @@ void LimitOrderBook::write_cancel_order(const Quote &quote)
 
 void LimitOrderBook::write_fill_order(const Quote &quote)
 {
-    assert(quote.type == FillOrder);
-    auto limits = quote.side == Bid ? bid_limits : ask_limits;
-    auto price_map = quote.side == Bid ? bid_price_map : ask_price_map;
+    assert(quote.type == QuoteType::FillOrder);
+    auto limits = quote.side == Side::Bid ? bid_limits : ask_limits;
+    auto price_map = quote.side == Side::Bid ? bid_price_map : ask_price_map;
     auto order = uid_order_map[quote.uid];
     auto limit = order->limit.lock();
     assert(limit);
@@ -152,8 +168,8 @@ void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity
     if (price == 0)
         price = ask_uid < bid_uid ? ask_order->price : bid_order->price;
     uint64_t timestamp = std::max(ask_order->timestamp, bid_order->timestamp);
-    write_fill_order(Quote(ask_uid, price, quantity, timestamp, Ask, FillOrder));
-    write_fill_order(Quote(bid_uid, price, quantity, timestamp, Bid, FillOrder));
+    write_fill_order(Quote(ask_uid, price, quantity, timestamp, Side::Ask, FillOrder));
+    write_fill_order(Quote(bid_uid, price, quantity, timestamp, Side::Bid, FillOrder));
 }
 
 void LimitOrderBook::match()
@@ -171,10 +187,10 @@ void LimitOrderBook::match()
 
 void LimitOrderBook::show()
 {
-    std::cout << "Bid:" << std::endl;
+    std::cout << "Side::Bid:" << std::endl;
     std::cout << *bid_limits << std::endl;
 
-    std::cout << "Ask:" << std::endl;
+    std::cout << "Side::Ask:" << std::endl;
     std::cout << *ask_limits << std::endl;
 }
 
