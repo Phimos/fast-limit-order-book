@@ -76,8 +76,10 @@ public:
     std::shared_ptr<Node<T>> root;
 
 private:
-    std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>> split_by_value(std::shared_ptr<Node<T>> node, const T &value);
-    std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>> split_by_index(std::shared_ptr<Node<T>> node, size_t index);
+    std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>>
+    split_by_value(std::shared_ptr<Node<T>> node, const T &value);
+    std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>>
+    split_by_index(std::shared_ptr<Node<T>> node, size_t index);
     std::shared_ptr<Node<T>> merge(std::shared_ptr<Node<T>> left, std::shared_ptr<Node<T>> right);
 
 public:
@@ -94,7 +96,8 @@ public:
 };
 
 template <typename T>
-std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>> Treap<T>::split_by_value(std::shared_ptr<Node<T>> node, const T &value)
+std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>>
+Treap<T>::split_by_value(std::shared_ptr<Node<T>> node, const T &value)
 {
     if (!node)
         return std::make_tuple(nullptr, nullptr, nullptr);
@@ -132,7 +135,8 @@ std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<N
 }
 
 template <typename T>
-std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>> Treap<T>::split_by_index(std::shared_ptr<Node<T>> node, size_t index)
+std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>>
+Treap<T>::split_by_index(std::shared_ptr<Node<T>> node, size_t index)
 {
     if (!node)
         return std::make_tuple(nullptr, nullptr, nullptr);
@@ -171,7 +175,8 @@ std::tuple<std::shared_ptr<Node<T>>, std::shared_ptr<Node<T>>, std::shared_ptr<N
 }
 
 template <typename T>
-std::shared_ptr<Node<T>> Treap<T>::merge(std::shared_ptr<Node<T>> left, std::shared_ptr<Node<T>> right)
+std::shared_ptr<Node<T>>
+Treap<T>::merge(std::shared_ptr<Node<T>> left, std::shared_ptr<Node<T>> right)
 {
     if (!left || !right)
         return left ? left : right;
