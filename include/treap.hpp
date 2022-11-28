@@ -6,7 +6,7 @@
 #include <stack>
 
 template <typename T>
-struct Node
+struct Node : public std::enable_shared_from_this<Node<T>>
 {
     std::shared_ptr<T> value_ptr;
     size_t size;
@@ -25,7 +25,49 @@ struct Node
             size += right->size;
     }
     T &value() { return *value_ptr; }
+    std::shared_ptr<Node<T>> prev();
+    std::shared_ptr<Node<T>> next();
 };
+
+template <typename T>
+std::shared_ptr<Node<T>> Node<T>::prev()
+{
+    std::shared_ptr<Node<T>> node;
+    if (left)
+    {
+        node = left;
+        while (node->right)
+            node = node->right;
+        return node;
+    }
+    else
+    {
+        node = this->shared_from_this();
+        while (node->parent.lock() && node->parent.lock()->left == node)
+            node = node->parent.lock();
+        return node->parent.lock();
+    }
+}
+
+template <typename T>
+std::shared_ptr<Node<T>> Node<T>::next()
+{
+    std::shared_ptr<Node<T>> node;
+    if (right)
+    {
+        node = right;
+        while (node->left)
+            node = node->left;
+        return node;
+    }
+    else
+    {
+        node = this->shared_from_this();
+        while (node->parent.lock() && node->parent.lock()->right == node)
+            node = node->parent.lock();
+        return node->parent.lock();
+    }
+}
 
 template <typename T>
 class Treap
