@@ -8,13 +8,17 @@
 #include <memory>
 #include <unordered_map>
 #include <iostream>
+#include <vector>
 
 class LimitOrderBook
 {
     TradingStatus status = TradingStatus::ContinuousTrading;
+
     std::shared_ptr<Treap<Limit>> bid_limits, ask_limits;
     std::unordered_map<uint64_t, std::shared_ptr<Limit>> bid_price_map, ask_price_map;
     std::unordered_map<uint64_t, std::shared_ptr<Order>> uid_order_map;
+
+    std::unordered_map<uint64_t, std::shared_ptr<Order>> call_auction_orders;
 
 public:
     LimitOrderBook() : bid_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())), ask_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())) {}
@@ -103,6 +107,7 @@ void LimitOrderBook::write_cancel_order(const Quote &quote)
 {
     assert(quote.type == CancelOrder);
     auto limits = quote.side == Bid ? bid_limits : ask_limits;
+    auto price_map = quote.side == Bid ? bid_price_map : ask_price_map;
     auto order = uid_order_map[quote.uid];
     auto limit = order->limit.lock();
     assert(limit);
@@ -113,13 +118,17 @@ void LimitOrderBook::write_cancel_order(const Quote &quote)
     while (!limit->orders.empty() && limit->orders.front()->quantity == 0)
         limit->orders.pop_front();
     if (limit->quantity == 0)
+    {
         limits->remove(*limit);
+        price_map.erase(limit->price);
+    }
 }
 
 void LimitOrderBook::write_fill_order(const Quote &quote)
 {
     assert(quote.type == FillOrder);
     auto limits = quote.side == Bid ? bid_limits : ask_limits;
+    auto price_map = quote.side == Bid ? bid_price_map : ask_price_map;
     auto order = uid_order_map[quote.uid];
     auto limit = order->limit.lock();
     assert(limit);
@@ -130,7 +139,10 @@ void LimitOrderBook::write_fill_order(const Quote &quote)
     while (!limit->orders.empty() && limit->orders.front()->quantity == 0)
         limit->orders.pop_front();
     if (limit->quantity == 0)
+    {
         limits->remove(*limit);
+        price_map.erase(limit->price);
+    }
 }
 
 void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price)
