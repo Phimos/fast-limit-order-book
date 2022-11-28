@@ -13,7 +13,8 @@ std::string strftime(uint64_t timestamp, const char *format = "%Y-%m-%d %H:%M:%S
     gmtime_r(&tt, &gmt);
     char buffer[32];
     strftime(buffer, sizeof(buffer), format, &gmt);
-    return std::string(buffer) + "." + std::to_string(timestamp % 1000000);
+    std::string micro = std::to_string(timestamp % 1000000);
+    return std::string(buffer) + "." + std::string(6 - micro.size(), '0') + micro;
 }
 
 #endif // __UTILS_HPP__
