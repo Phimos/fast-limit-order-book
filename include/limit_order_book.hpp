@@ -11,6 +11,7 @@
 #include <vector>
 #include <cmath>
 #include <string>
+#include <sstream>
 
 class LimitOrderBook
 {
@@ -24,6 +25,8 @@ class LimitOrderBook
     std::unordered_map<uint64_t, std::shared_ptr<Order>> uid_order_map;
 
     std::unordered_map<uint64_t, std::shared_ptr<Order>> call_auction_orders;
+
+    std::deque<std::shared_ptr<Transaction>> transactions; // TODO: track transactions
 
     void write_limit_order(const Quote &quote);
     void write_market_order(const Quote &quote);
@@ -54,6 +57,9 @@ public:
     void match_call_auction();
 
     void show();
+
+    void load(const std::string &filename);                                                // TODO: load from csv file
+    void until(size_t hour, size_t minute = 0, size_t second = 0, size_t millisecond = 0); // TODO: process until the given time
 };
 
 void LimitOrderBook::clear()
@@ -245,6 +251,37 @@ void LimitOrderBook::show() // TODO: better show function
 
     std::cout << "Side::Ask:" << std::endl;
     std::cout << *ask_limits << std::endl;
+}
+
+void LimitOrderBook::load(const std::string &filename)
+{
+    // check it is a csv file
+    if (filename.substr(filename.find_last_of(".") + 1) != "csv")
+        throw std::runtime_error("file is not a csv file");
+
+    // open file
+    std::ifstream file(filename);
+    if (!file.is_open())
+        throw std::runtime_error("file is not open");
+
+    // read file
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string item;
+        std::vector<std::string> record;
+        while (std::getline(ss, item, ','))
+            record.push_back(item);
+        if (record.size() != 5)
+            throw std::runtime_error("record size is not 5");
+        uint64_t uid = std::stoull(record[0]);
+        uint64_t price = double2int(std::stod(record[1]));
+        uint64_t quantity = std::stoull(record[2]);
+        uint64_t timestamp = std::stoull(record[3]);
+        Side side = record[4] == "Bid" ? Side::Bid : Side::Ask;
+        write_limit_order(Quote(uid, price, quantity, timestamp, side, LimitOrder));
+    }
 }
 
 #endif // __LIMIT_ORDER_BOOK_HPP__
