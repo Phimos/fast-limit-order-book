@@ -190,7 +190,7 @@ void LimitOrderBook::match()
     }
 }
 
-void LimitOrderBook::show()
+void LimitOrderBook::show() // TODO: better show function
 {
     std::cout << "Side::Bid:" << std::endl;
     std::cout << *bid_limits << std::endl;
