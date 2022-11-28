@@ -5,6 +5,7 @@
 #include <memory>
 #include <map>
 #include "double_linked_list.hpp"
+#include "treap.hpp"
 
 enum Side : bool
 {
@@ -47,6 +48,43 @@ struct Limit : public std::enable_shared_from_this<Limit>
         os << "Limit(" << (limit.side == Bid ? "Bid" : "Ask") << ", " << limit.price << ", " << limit.quantity << ")";
         return os;
     }
+};
+
+template <>
+struct Node<Limit>
+{
+    std::shared_ptr<Limit> value_ptr;
+    size_t size;
+    size_t priority;
+    uint64_t sum_quantity, count_orders;
+    std::shared_ptr<Node<Limit>> left, right;
+    std::weak_ptr<Node<Limit>> parent;
+
+    Node(std::shared_ptr<Limit> value_ptr)
+        : value_ptr(value_ptr), size(1), priority(rand()),
+          sum_quantity(0), count_orders(0) {}
+    Node(Limit value)
+        : value_ptr(std::make_shared<Limit>(value)), size(1), priority(rand()),
+          sum_quantity(0), count_orders(0) {}
+    void update()
+    {
+        size = 1;
+        sum_quantity = value_ptr->quantity;
+        count_orders = value_ptr->orders.size;
+        if (left)
+        {
+            size += left->size;
+            sum_quantity += left->sum_quantity;
+            count_orders += left->count_orders;
+        }
+        if (right)
+        {
+            size += right->size;
+            sum_quantity += right->sum_quantity;
+            count_orders += right->count_orders;
+        }
+    }
+    Limit &value() { return *value_ptr; }
 };
 
 enum QuoteType

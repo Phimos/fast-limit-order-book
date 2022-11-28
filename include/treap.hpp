@@ -16,21 +16,16 @@ struct Node
 
     Node(std::shared_ptr<T> value_ptr) : value_ptr(value_ptr), size(1), priority(rand()) {}
     Node(T value) : value_ptr(std::make_shared<T>(value)), size(1), priority(rand()) {}
-    Node(std::shared_ptr<T> value_ptr, Node<T> *parent) : value_ptr(value_ptr), parent(parent), size(1), priority(rand()) {}
-    Node(T value, Node<T> *parent) : value_ptr(std::make_shared<T>(value), parent), size(1), priority(rand()) {}
-    void update();
+    void update()
+    {
+        size = 1;
+        if (left)
+            size += left->size;
+        if (right)
+            size += right->size;
+    }
     T &value() { return *value_ptr; }
 };
-
-template <typename T>
-void Node<T>::update()
-{
-    size = 1;
-    if (left)
-        size += left->size;
-    if (right)
-        size += right->size;
-}
 
 template <typename T>
 class Treap
