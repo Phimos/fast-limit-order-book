@@ -14,6 +14,9 @@ PYBIND11_MODULE(flob, m)
         .def(py::init<size_t>(), py::arg("decimal_places") = 2)
         .def("clear", &LimitOrderBook::clear)
         .def("write", &LimitOrderBook::write, py::arg("quote"))
+        .def("set_status", py::overload_cast<TradingStatus>(&LimitOrderBook::set_status), py::arg("status"))
+        .def("set_status", py::overload_cast<const std::string &>(&LimitOrderBook::set_status), py::arg("status"))
+        .def("load", &LimitOrderBook::load, py::arg("filename"), py::arg("header") = true)
         .def("show", &LimitOrderBook::show);
 
     py::class_<Quote>(m, "Quote")
