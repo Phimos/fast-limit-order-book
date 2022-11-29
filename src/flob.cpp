@@ -19,7 +19,7 @@ PYBIND11_MODULE(flob, m)
         .def("load", &LimitOrderBook::load, py::arg("filename"), py::arg("header") = true)
         .def("until", &LimitOrderBook::until, py::arg("hour") = 24, py::arg("minute") = 0,
              py::arg("second") = 0, py::arg("millisecond") = 0)
-        .def("match_call_auction", &LimitOrderBook::match_call_auction)
+        .def("match_call_auction", &LimitOrderBook::match_call_auction, py::arg("timestamp") = 0)
         .def("get_topk_bid_price", &LimitOrderBook::get_topk_bid_price, py::arg("k"))
         .def("get_topk_ask_price", &LimitOrderBook::get_topk_ask_price, py::arg("k"))
         .def("get_topk_bid_volume", &LimitOrderBook::get_topk_bid_volume, py::arg("k"))
