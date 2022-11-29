@@ -4,6 +4,7 @@
 #include "double_linked_list.hpp"
 #include "treap.hpp"
 #include "struct.hpp"
+#include "utils.hpp"
 #include <cassert>
 #include <memory>
 #include <unordered_map>
@@ -380,7 +381,7 @@ void LimitOrderBook::until(uint64_t hour, uint64_t minute, uint64_t second, uint
                          second * 1000000000UL +
                          millisecond * 1000000UL;
     timestamp = quotes.front().timestamp - (quotes.front().timestamp % oneday) + timestamp;
-    while (!quotes.empty() && quotes.front().timestamp < timestamp)
+    while (!quotes.empty() && quotes.front().timestamp <= timestamp)
     {
         write(quotes.front());
         quotes.pop_front();
