@@ -61,7 +61,7 @@ public:
     void show();
 
     size_t load(const std::string &filename, bool header = true);
-    void until(size_t hour, size_t minute = 0, size_t second = 0, size_t millisecond = 0); // TODO: process until the given time
+    void until(uint64_t hour = 24, uint64_t minute = 0, uint64_t second = 0, uint64_t millisecond = 0); // TODO: process until the given time
 };
 
 void LimitOrderBook::clear()
@@ -82,39 +82,23 @@ void LimitOrderBook::set_status(const std::string &status)
 
 void LimitOrderBook::write(const Quote &quote)
 {
-    switch (status)
+    switch (quote.type)
     {
-    case TradingStatus::ContinuousTrading:
-        switch (quote.type)
-        {
-        case QuoteType::LimitOrder:
-            write_limit_order(quote);
-            break;
-        case QuoteType::MarketOrder:
-            write_market_order(quote);
-            break;
-        case QuoteType::BestPriceOrder:
-            write_best_price_order(quote);
-            break;
-        case QuoteType::CancelOrder:
-            write_cancel_order(quote);
-            break;
-        case QuoteType::FillOrder:
-            write_fill_order(quote);
-            break;
-        }
+    case QuoteType::LimitOrder:
+        write_limit_order(quote);
         break;
-    case TradingStatus::CallAuction:
-        // TODO: implement call auction
-        switch (quote.type)
-        {
-        case QuoteType::LimitOrder:
-            break;
-        case QuoteType::CancelOrder:
-            break;
-        case QuoteType::FillOrder:
-            break;
-        }
+    case QuoteType::MarketOrder:
+        write_market_order(quote);
+        break;
+    case QuoteType::BestPriceOrder:
+        write_best_price_order(quote);
+        break;
+    case QuoteType::CancelOrder:
+        write_cancel_order(quote);
+        break;
+    case QuoteType::FillOrder:
+        write_fill_order(quote);
+        break;
     }
 }
 
@@ -142,6 +126,7 @@ void LimitOrderBook::write_limit_order(const Quote &quote)
 void LimitOrderBook::write_market_order(const Quote &quote)
 {
     assert(quote.type == QuoteType::MarketOrder);
+    assert(status == TradingStatus::ContinuousTrading);
     if ((quote.side == Side::Bid && ask_limits->empty()) || (quote.side == Side::Ask && bid_limits->empty()))
         return;
     uint64_t price = quote.side == Side::Bid ? ask_limits->min()->value().price : bid_limits->max()->value().price;
@@ -151,6 +136,7 @@ void LimitOrderBook::write_market_order(const Quote &quote)
 void LimitOrderBook::write_best_price_order(const Quote &quote)
 {
     assert(quote.type == QuoteType::BestPriceOrder);
+    assert(status == TradingStatus::ContinuousTrading);
     if ((quote.side == Side::Bid && bid_limits->empty()) || (quote.side == Side::Ask && ask_limits->empty()))
         return;
     uint64_t price = quote.side == Side::Bid ? bid_limits->max()->value().price : ask_limits->min()->value().price;
@@ -225,25 +211,52 @@ void LimitOrderBook::match()
 
 void LimitOrderBook::match_call_auction()
 {
-    uint64_t ref_price;
+    uint64_t ref_price = 0;
     uint64_t ask_cum_quantity = 0, bid_cum_quantity = 0;
     std::shared_ptr<Node<Limit>> ask_node, bid_node;
     ask_node = ask_limits->min();
     bid_node = bid_limits->max();
-    while (ask_node && bid_node && ask_node->value().price < bid_node->value().price)
+    while (ask_node && bid_node && ask_node->value().price <= bid_node->value().price)
     {
         if (ask_cum_quantity < bid_cum_quantity)
         {
             ask_cum_quantity += ask_node->value().quantity;
+            ref_price = ask_node->value().price;
             ask_node = ask_node->next();
         }
         else
         {
             bid_cum_quantity += bid_node->value().quantity;
+            ref_price = bid_node->value().price;
             bid_node = bid_node->prev();
         }
     }
-    ref_price = ask_node ? ask_node->value().price : bid_node->value().price;
+    if (ref_price == 0)
+        return;
+
+    uint64_t quantity = std::min(ask_cum_quantity, bid_cum_quantity);
+    ask_cum_quantity = quantity;
+    bid_cum_quantity = quantity;
+
+    while (ask_limits->min()->value().price < ref_price)
+    {
+        Limit &ask_limit = ask_limits->min()->value();
+        std::shared_ptr<Order> &ask_order = ask_limit.orders.front();
+        write_fill_order(Quote(ask_order->uid, ask_order->price,
+                               std::min(ask_order->quantity, ask_cum_quantity),
+                               ask_order->timestamp, Side::Ask, FillOrder));
+        ask_cum_quantity -= ask_order->quantity;
+    }
+    while (bid_limits->max()->value().price > ref_price)
+    {
+        Limit &bid_limit = bid_limits->max()->value();
+        std::shared_ptr<Order> &bid_order = bid_limit.orders.front();
+        write_fill_order(Quote(bid_order->uid, bid_order->price,
+                               std::min(bid_order->quantity, bid_cum_quantity),
+                               bid_order->timestamp, Side::Bid, FillOrder));
+        bid_cum_quantity -= bid_order->quantity;
+    }
+    match();
 }
 
 void LimitOrderBook::show() // TODO: better show function
@@ -291,6 +304,23 @@ size_t LimitOrderBook::load(const std::string &filename, bool header)
     }
     std::cout << "read " << quotes.size() << " quotes" << std::endl;
     return quotes.size();
+}
+
+void LimitOrderBook::until(uint64_t hour, uint64_t minute, uint64_t second, uint64_t millisecond)
+{
+    const uint64_t oneday = 24UL * 60UL * 60UL * 1000000000UL; // unit: nanosecond
+    if (quotes.empty())
+        return;
+    uint64_t timestamp = hour * 60UL * 60UL * 1000000000UL +
+                         minute * 60UL * 1000000000UL +
+                         second * 1000000000UL +
+                         millisecond * 1000000UL;
+    timestamp = quotes.front().timestamp - (quotes.front().timestamp % oneday) + timestamp;
+    while (!quotes.empty() && quotes.front().timestamp < timestamp)
+    {
+        write(quotes.front());
+        quotes.pop_front();
+    }
 }
 
 #endif // __LIMIT_ORDER_BOOK_HPP__

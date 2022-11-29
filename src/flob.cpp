@@ -17,6 +17,9 @@ PYBIND11_MODULE(flob, m)
         .def("set_status", py::overload_cast<TradingStatus>(&LimitOrderBook::set_status), py::arg("status"))
         .def("set_status", py::overload_cast<const std::string &>(&LimitOrderBook::set_status), py::arg("status"))
         .def("load", &LimitOrderBook::load, py::arg("filename"), py::arg("header") = true)
+        .def("until", &LimitOrderBook::until, py::arg("hour") = 24, py::arg("minute") = 0,
+             py::arg("second") = 0, py::arg("millisecond") = 0)
+        .def("match_call_auction", &LimitOrderBook::match_call_auction)
         .def("show", &LimitOrderBook::show);
 
     py::class_<Quote>(m, "Quote")
