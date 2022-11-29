@@ -26,8 +26,6 @@ class LimitOrderBook
     std::unordered_map<uint64_t, std::shared_ptr<Limit>> bid_price_map, ask_price_map;
     std::unordered_map<uint64_t, std::shared_ptr<Order>> uid_order_map;
 
-    std::unordered_map<uint64_t, std::shared_ptr<Order>> call_auction_orders;
-
     std::deque<Transaction> transactions;
     std::deque<Quote> quotes;
 
@@ -310,7 +308,9 @@ void LimitOrderBook::match_call_auction()
     std::shared_ptr<Node<Limit>> ask_node, bid_node;
     ask_node = ask_limits->min();
     bid_node = bid_limits->max();
-    while (ask_node && bid_node && ask_node->value().price <= bid_node->value().price)
+    if (!ask_node || !bid_node)
+        return;
+    while (ask_node && bid_node && (ask_node->value().price <= ref_price || ref_price <= bid_node->value().price))
     {
         if (ask_cum_quantity < bid_cum_quantity)
         {
@@ -382,10 +382,7 @@ void LimitOrderBook::until(uint64_t hour, uint64_t minute, uint64_t second, uint
     const uint64_t oneday = 24UL * 60UL * 60UL * 1000000000UL; // unit: nanosecond
     if (quotes.empty())
         return;
-    uint64_t timestamp = hour * 60UL * 60UL * 1000000000UL +
-                         minute * 60UL * 1000000000UL +
-                         second * 1000000000UL +
-                         millisecond * 1000000UL;
+    uint64_t timestamp = 1000000UL * (millisecond + 1000UL * (second + 60UL * (minute + 60UL * hour)));
     timestamp = quotes.front().timestamp - (quotes.front().timestamp % oneday) + timestamp;
     while (!quotes.empty() && quotes.front().timestamp <= timestamp)
     {
