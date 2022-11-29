@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <tuple>
+#include <vector>
 #include <stack>
 
 template <typename T>
@@ -86,6 +87,7 @@ public:
     Treap() : root(nullptr) {}
     void clear();
     bool empty();
+    size_t size();
     void insert(const T &value);
     void insert(std::shared_ptr<T> value_ptr);
     void remove(const T &value);
@@ -93,6 +95,10 @@ public:
     std::shared_ptr<Node<T>> select_by_index(size_t index);
     std::shared_ptr<Node<T>> min();
     std::shared_ptr<Node<T>> max();
+    std::vector<std::shared_ptr<Node<T>>> nlargest(size_t n);
+    std::vector<std::shared_ptr<Node<T>>> nsmallest(size_t n);
+    std::shared_ptr<Node<T>> kth_largest(size_t k);
+    std::shared_ptr<Node<T>> kth_smallest(size_t k);
 };
 
 template <typename T>
@@ -211,6 +217,12 @@ bool Treap<T>::empty()
 }
 
 template <typename T>
+size_t Treap<T>::size()
+{
+    return root ? root->size : 0;
+}
+
+template <typename T>
 void Treap<T>::insert(const T &value)
 {
     insert(std::make_shared<T>(value));
@@ -275,6 +287,64 @@ std::shared_ptr<Node<T>> Treap<T>::max()
 }
 
 template <typename T>
+std::shared_ptr<Node<T>> Treap<T>::kth_largest(size_t k)
+{
+    return select_by_index(size() - k + 1);
+}
+
+template <typename T>
+std::shared_ptr<Node<T>> Treap<T>::kth_smallest(size_t k)
+{
+    return select_by_index(k);
+}
+
+template <typename T>
+std::vector<std::shared_ptr<Node<T>>> Treap<T>::nlargest(size_t n)
+{
+    std::vector<std::shared_ptr<Node<T>>> nodes;
+    std::stack<std::shared_ptr<Node<T>>> stack;
+    std::shared_ptr<Node<T>> node = root;
+    while (node || !stack.empty())
+    {
+        while (node)
+        {
+            stack.push(node);
+            node = node->right;
+        }
+        node = stack.top();
+        stack.pop();
+        nodes.push_back(node);
+        if (nodes.size() == n)
+            break;
+        node = node->left;
+    }
+    return nodes;
+}
+
+template <typename T>
+std::vector<std::shared_ptr<Node<T>>> Treap<T>::nsmallest(size_t n)
+{
+    std::vector<std::shared_ptr<Node<T>>> nodes;
+    std::stack<std::shared_ptr<Node<T>>> stack;
+    std::shared_ptr<Node<T>> node = root;
+    while (node || !stack.empty())
+    {
+        while (node)
+        {
+            stack.push(node);
+            node = node->left;
+        }
+        node = stack.top();
+        stack.pop();
+        nodes.push_back(node);
+        if (nodes.size() == n)
+            break;
+        node = node->right;
+    }
+    return nodes;
+}
+
+template <typename T>
 std::ostream &operator<<(std::ostream &os, const Treap<T> &treap)
 {
     std::stack<std::shared_ptr<Node<T>>> stack;
@@ -287,7 +357,6 @@ std::ostream &operator<<(std::ostream &os, const Treap<T> &treap)
             node = node->left;
         }
         node = stack.top();
-
         stack.pop();
         os << node->value() << " ";
         node = node->right;

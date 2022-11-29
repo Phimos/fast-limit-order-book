@@ -46,7 +46,7 @@ public:
     LimitOrderBook(size_t decimal_places = 2)
         : decimal_places(decimal_places),
           scale_up(std::pow(10, decimal_places)),
-          scale_down(std::pow(10, -decimal_places)),
+          scale_down(1.0 / scale_up),
           bid_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           ask_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           bid_best_limit(nullptr),
@@ -65,8 +65,77 @@ public:
     void show();
 
     size_t load(const std::string &filename, bool header = true);
-    void until(uint64_t hour = 24, uint64_t minute = 0, uint64_t second = 0, uint64_t millisecond = 0); // TODO: process until the given time
+    void until(uint64_t hour = 24, uint64_t minute = 0, uint64_t second = 0, uint64_t millisecond = 0);
+
+    std::vector<double> get_topk_bid_price(size_t k);
+    std::vector<double> get_topk_ask_price(size_t k);
+    std::vector<uint64_t> get_topk_bid_volume(size_t k);
+    std::vector<uint64_t> get_topk_ask_volume(size_t k);
+    double get_kth_bid_price(size_t k);
+    double get_kth_ask_price(size_t k);
+    uint64_t get_kth_bid_volume(size_t k);
+    uint64_t get_kth_ask_volume(size_t k);
 };
+
+std::vector<double> LimitOrderBook::get_topk_bid_price(size_t k)
+{
+    auto nodes = bid_limits->nlargest(k);
+    std::vector<double> prices;
+    for (auto &node : nodes)
+        prices.push_back(int2double(node->value().price));
+    return prices;
+}
+
+std::vector<double> LimitOrderBook::get_topk_ask_price(size_t k)
+{
+    auto nodes = ask_limits->nsmallest(k);
+    std::vector<double> prices;
+    for (auto &node : nodes)
+        prices.push_back(int2double(node->value().price));
+    return prices;
+}
+
+std::vector<uint64_t> LimitOrderBook::get_topk_bid_volume(size_t k)
+{
+    auto nodes = bid_limits->nlargest(k);
+    std::vector<uint64_t> quantities;
+    for (auto &node : nodes)
+        quantities.push_back(node->value().quantity);
+    return quantities;
+}
+
+std::vector<uint64_t> LimitOrderBook::get_topk_ask_volume(size_t k)
+{
+    auto nodes = ask_limits->nsmallest(k);
+    std::vector<uint64_t> quantities;
+    for (auto &node : nodes)
+        quantities.push_back(node->value().quantity);
+    return quantities;
+}
+
+double LimitOrderBook::get_kth_bid_price(size_t k)
+{
+    auto node = bid_limits->kth_largest(k);
+    return node ? int2double(node->value().price) : 0;
+}
+
+double LimitOrderBook::get_kth_ask_price(size_t k)
+{
+    auto node = ask_limits->kth_smallest(k);
+    return node ? int2double(node->value().price) : 0;
+}
+
+uint64_t LimitOrderBook::get_kth_bid_volume(size_t k)
+{
+    auto node = bid_limits->kth_largest(k);
+    return node ? node->value().quantity : 0;
+}
+
+uint64_t LimitOrderBook::get_kth_ask_volume(size_t k)
+{
+    auto node = ask_limits->kth_smallest(k);
+    return node ? node->value().quantity : 0;
+}
 
 void LimitOrderBook::clear()
 {

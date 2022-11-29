@@ -20,6 +20,14 @@ PYBIND11_MODULE(flob, m)
         .def("until", &LimitOrderBook::until, py::arg("hour") = 24, py::arg("minute") = 0,
              py::arg("second") = 0, py::arg("millisecond") = 0)
         .def("match_call_auction", &LimitOrderBook::match_call_auction)
+        .def("get_topk_bid_price", &LimitOrderBook::get_topk_bid_price, py::arg("k"))
+        .def("get_topk_ask_price", &LimitOrderBook::get_topk_ask_price, py::arg("k"))
+        .def("get_topk_bid_volume", &LimitOrderBook::get_topk_bid_volume, py::arg("k"))
+        .def("get_topk_ask_volume", &LimitOrderBook::get_topk_ask_volume, py::arg("k"))
+        .def("get_kth_bid_price", &LimitOrderBook::get_kth_bid_price, py::arg("k"))
+        .def("get_kth_ask_price", &LimitOrderBook::get_kth_ask_price, py::arg("k"))
+        .def("get_kth_bid_volume", &LimitOrderBook::get_kth_bid_volume, py::arg("k"))
+        .def("get_kth_ask_volume", &LimitOrderBook::get_kth_ask_volume, py::arg("k"))
         .def("show", &LimitOrderBook::show);
 
     py::class_<Quote>(m, "Quote")
