@@ -16,7 +16,7 @@ CLOSING_SESSION_END = (15, 0)
 
 
 lob = LimitOrderBook()
-lob.load("sample.csv")
+lob.load("data/sample.csv")
 
 # Pre-opening session
 lob.set_status("CallAuction")
