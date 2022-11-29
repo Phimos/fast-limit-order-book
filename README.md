@@ -7,5 +7,5 @@ use this project to learn smart pointers
 ```
 git clone https://github.com/Phimos/fast-limit-order-book
 cd fast-limit-order-book
-pip install -e .
+python setup.py install
 ```
