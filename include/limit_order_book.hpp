@@ -73,6 +73,9 @@ void LimitOrderBook::clear()
     bid_limits->clear();
     ask_limits->clear();
     uid_order_map.clear();
+    bid_best_limit = nullptr;
+    ask_best_limit = nullptr;
+    open = high = low = close = volume = 0;
 }
 
 void LimitOrderBook::set_status(const std::string &status)
