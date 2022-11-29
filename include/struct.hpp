@@ -164,6 +164,6 @@ struct Transaction
     const uint64_t timestamp;
     Transaction(uint64_t bid_uid, uint64_t ask_uid, uint64_t price, uint64_t quantity, uint64_t timestamp)
         : bid_uid(bid_uid), ask_uid(ask_uid), price(price), quantity(quantity), timestamp(timestamp) {}
-}
+};
 
 #endif // __STRUCT_HPP__
