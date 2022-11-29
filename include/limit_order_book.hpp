@@ -27,14 +27,17 @@ class LimitOrderBook
 
     std::unordered_map<uint64_t, std::shared_ptr<Order>> call_auction_orders;
 
-    std::deque<std::shared_ptr<Transaction>> transactions; // TODO: track transactions
+    std::deque<Transaction> transactions;
     std::deque<Quote> quotes;
+
+    uint64_t open, high, low, close, volume;
 
     void write_limit_order(const Quote &quote);
     void write_market_order(const Quote &quote);
     void write_best_price_order(const Quote &quote);
     void write_cancel_order(const Quote &quote);
     void write_fill_order(const Quote &quote);
+    void track_transaction(const Transaction &transaction);
 
     inline uint64_t double2int(double value) { return (uint64_t)(value * scale_up); }
     inline double int2double(uint64_t value) { return (double)value * scale_down; }
@@ -47,7 +50,8 @@ public:
           bid_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           ask_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           bid_best_limit(nullptr),
-          ask_best_limit(nullptr) {}
+          ask_best_limit(nullptr),
+          open(0), high(0), low(0), close(0), volume(0) {}
     void clear();
     void write(const Quote &quote);
     void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price = 0);
@@ -73,8 +77,8 @@ void LimitOrderBook::clear()
 
 void LimitOrderBook::set_status(const std::string &status)
 {
-    assert(status == "CallAuction" || status == "ContinuousTrading");
-    if (status == "CallAuction")
+    assert(status == "CallAuction" || status == "ContinuousTrading" || status == "ClosingAuction");
+    if (status == "CallAuction" || status == "ClosingAuction")
         this->status = TradingStatus::CallAuction;
     else
         this->status = TradingStatus::ContinuousTrading;
@@ -185,6 +189,15 @@ void LimitOrderBook::write_fill_order(const Quote &quote)
     }
 }
 
+void LimitOrderBook::track_transaction(const Transaction &transaction)
+{
+    open = open == 0 ? transaction.price : open;
+    high = high == 0 ? transaction.price : std::max(high, transaction.price);
+    low = low == 0 ? transaction.price : std::min(low, transaction.price);
+    close = transaction.price;
+    volume += transaction.quantity;
+}
+
 void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price)
 {
     auto ask_order = uid_order_map[ask_uid];
@@ -192,6 +205,8 @@ void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity
     if (price == 0)
         price = ask_uid < bid_uid ? ask_order->price : bid_order->price;
     uint64_t timestamp = std::max(ask_order->timestamp, bid_order->timestamp);
+    transactions.emplace_back(bid_uid, ask_uid, price, quantity, timestamp);
+    track_transaction(transactions.back());
     write_fill_order(Quote(ask_uid, price, quantity, timestamp, Side::Ask, FillOrder));
     write_fill_order(Quote(bid_uid, price, quantity, timestamp, Side::Bid, FillOrder));
 }
