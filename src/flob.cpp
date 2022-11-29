@@ -28,6 +28,7 @@ PYBIND11_MODULE(flob, m)
         .def("get_kth_ask_price", &LimitOrderBook::get_kth_ask_price, py::arg("k"))
         .def("get_kth_bid_volume", &LimitOrderBook::get_kth_bid_volume, py::arg("k"))
         .def("get_kth_ask_volume", &LimitOrderBook::get_kth_ask_volume, py::arg("k"))
+        .def("get_transactions", &LimitOrderBook::get_transactions)
         .def("show", &LimitOrderBook::show);
 
     py::class_<Quote>(m, "Quote")
@@ -40,6 +41,16 @@ PYBIND11_MODULE(flob, m)
         .def_readonly("timestamp", &Quote::timestamp)
         .def_readonly("side", &Quote::side)
         .def_readonly("type", &Quote::type);
+
+    py::class_<Transaction>(m, "Transaction")
+        .def(py::init<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>(),
+             py::arg("bid_uid"), py::arg("ask_uid"), py::arg("price"),
+             py::arg("quantity"), py::arg("timestamp"))
+        .def_readonly("bid_uid", &Transaction::bid_uid)
+        .def_readonly("ask_uid", &Transaction::ask_uid)
+        .def_readonly("price", &Transaction::price)
+        .def_readonly("quantity", &Transaction::quantity)
+        .def_readonly("timestamp", &Transaction::timestamp);
 
     py::enum_<QuoteType>(m, "QuoteType")
         .value("LimitOrder", QuoteType::LimitOrder)
