@@ -55,7 +55,7 @@ public:
     void set_status(TradingStatus status) { this->status = status; }
     void set_status(const std::string &status);
 
-    void match();
+    void match(uint64_t ref_price = 0);
     void match_call_auction();
 
     void show();
@@ -196,7 +196,7 @@ void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity
     write_fill_order(Quote(bid_uid, price, quantity, timestamp, Side::Bid, FillOrder));
 }
 
-void LimitOrderBook::match()
+void LimitOrderBook::match(uint64_t ref_price)
 {
     while (!ask_limits->empty() && !bid_limits->empty() && ask_limits->min()->value().price <= bid_limits->max()->value().price)
     {
@@ -205,7 +205,7 @@ void LimitOrderBook::match()
         std::shared_ptr<Order> &ask_order = ask_limit.orders.front();
         std::shared_ptr<Order> &bid_order = bid_limit.orders.front();
         uint64_t quantity = std::min(ask_order->quantity, bid_order->quantity);
-        trade(ask_order->uid, bid_order->uid, quantity);
+        trade(ask_order->uid, bid_order->uid, quantity, ref_price);
     }
 }
 
@@ -233,30 +233,7 @@ void LimitOrderBook::match_call_auction()
     }
     if (ref_price == 0)
         return;
-
-    uint64_t quantity = std::min(ask_cum_quantity, bid_cum_quantity);
-    ask_cum_quantity = quantity;
-    bid_cum_quantity = quantity;
-
-    while (ask_limits->min()->value().price < ref_price)
-    {
-        Limit &ask_limit = ask_limits->min()->value();
-        std::shared_ptr<Order> &ask_order = ask_limit.orders.front();
-        write_fill_order(Quote(ask_order->uid, ask_order->price,
-                               std::min(ask_order->quantity, ask_cum_quantity),
-                               ask_order->timestamp, Side::Ask, FillOrder));
-        ask_cum_quantity -= ask_order->quantity;
-    }
-    while (bid_limits->max()->value().price > ref_price)
-    {
-        Limit &bid_limit = bid_limits->max()->value();
-        std::shared_ptr<Order> &bid_order = bid_limit.orders.front();
-        write_fill_order(Quote(bid_order->uid, bid_order->price,
-                               std::min(bid_order->quantity, bid_cum_quantity),
-                               bid_order->timestamp, Side::Bid, FillOrder));
-        bid_cum_quantity -= bid_order->quantity;
-    }
-    match();
+    match(ref_price);
 }
 
 void LimitOrderBook::show() // TODO: better show function
