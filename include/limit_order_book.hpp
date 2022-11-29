@@ -68,6 +68,8 @@ public:
     size_t load(const std::string &filename, bool header = true);
     void until(uint64_t hour = 24, uint64_t minute = 0, uint64_t second = 0, uint64_t millisecond = 0);
 
+    std::vector<Transaction> get_transactions() const { return std::vector<Transaction>(transactions.begin(), transactions.end()); }
+
     std::vector<double> get_topk_bid_price(size_t k);
     std::vector<double> get_topk_ask_price(size_t k);
     std::vector<uint64_t> get_topk_bid_volume(size_t k);
@@ -207,7 +209,11 @@ void LimitOrderBook::write_market_order(const Quote &quote)
     if ((quote.side == Side::Bid && ask_limits->empty()) || (quote.side == Side::Ask && bid_limits->empty()))
         return;
     uint64_t price = quote.side == Side::Bid ? ask_limits->min()->value().price : bid_limits->max()->value().price;
-    write_limit_order(Quote(quote.uid, price, quote.quantity, quote.timestamp, quote.side, LimitOrder));
+    uint64_t quantity = quote.side == Side::Bid ? ask_limits->min()->value().quantity : bid_limits->max()->value().quantity;
+    quantity = std::min(quantity, quote.quantity);
+    write_limit_order(Quote(quote.uid, price, quantity, quote.timestamp, quote.side, LimitOrder));
+    if (quote.quantity > quantity)
+        write_market_order(Quote(quote.uid, 0, quote.quantity - quantity, quote.timestamp, quote.side, MarketOrder));
 }
 
 void LimitOrderBook::write_best_price_order(const Quote &quote)
