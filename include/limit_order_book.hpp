@@ -302,7 +302,7 @@ void LimitOrderBook::match(uint64_t ref_price, uint64_t timestamp)
     }
 }
 
-void LimitOrderBook::match_call_auction(uint64_t timestamp = 0)
+void LimitOrderBook::match_call_auction(uint64_t timestamp)
 {
     uint64_t ref_price = 0;
     uint64_t ask_cum_quantity = 0, bid_cum_quantity = 0;
