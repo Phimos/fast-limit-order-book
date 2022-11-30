@@ -30,39 +30,57 @@ class Table
     size_t width;
 
 public:
-    Table(std::vector<std::string> headers, size_t width = 20) : headers(headers), width(width) {}
+    Table(std::vector<std::string> headers = {}, size_t width = 20)
+        : headers(headers), width(width) {}
 
     template <typename Stream>
     void print(Stream &stream)
     {
-        stream << "|";
+        stream << "┌";
+        for (size_t i = 0; i < headers.size(); ++i)
+        {
+            stream << std::string(width, '─');
+            if (i != headers.size() - 1)
+                stream << "┬";
+        }
+        stream << "┐";
+
+        stream << "│";
         for (size_t i = 0; i < headers.size(); i++)
         {
-            stream << headers[i] << std::string(width - headers[i].size(), ' ') << "|";
+            stream << headers[i] << std::string(width - headers[i].size(), ' ') << "│";
         }
         stream << std::endl;
-        stream << "|";
-        for (size_t i = 0; i < headers.size(); i++)
+
+        stream << "╞";
+        for (size_t i = 0; i < headers.size(); ++i)
         {
-            stream << std::string(width, '-');
-            if (i < headers.size() - 1)
-                stream << "+";
+            stream << std::string(width, '═');
+            if (i != headers.size() - 1)
+                stream << "╪";
         }
-        stream << "|" << std::endl;
+        stream << "╡" << std::endl;
+
         for (auto &row : data)
         {
-            stream << "|";
+            stream << "│";
             std::experimental::apply([&](auto &&...args)
-                                     { ((stream << args << std::string(width - std::to_string(args).size(), ' ') << '|'), ...); },
+                                     { ((stream << args << std::string(width - std::to_string(args).size(), ' ') << '│'), ...); },
                                      row);
             stream << std::endl;
         }
+
+        stream << "└";
+        for (size_t i = 0; i < headers.size(); ++i)
+        {
+            stream << std::string(width, '─');
+            if (i != headers.size() - 1)
+                stream << "┴";
+        }
+        stream << "┘" << std::endl;
     }
 
-    void add(Ts... args)
-    {
-        data.emplace_back(args...);
-    }
+    void add(Ts... args) { data.emplace_back(args...); }
 };
 
 #endif // __UTILS_HPP__
