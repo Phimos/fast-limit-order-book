@@ -29,6 +29,7 @@ class Table
     std::vector<DataTuple> data;
     std::vector<std::string> headers;
     size_t width, num_columns;
+    std::vector<std::pair<size_t, std::string>> special_lines;
 
 public:
     Table(std::vector<std::string> headers = {}, size_t width = 20)
@@ -48,14 +49,8 @@ public:
     }
 
     template <typename Stream>
-    void print(Stream &stream)
+    void print_header(Stream &stream)
     {
-        std::string top_border = line("┌", "┐", "┬", "─");
-        std::string middle_border = line("╞", "╡", "╪", "═");
-        std::string bottom_border = line("└", "┘", "┴", "─");
-
-        stream << top_border << std::endl;
-
         stream << "│";
         for (size_t i = 0; i < headers.size(); i++)
         {
@@ -65,22 +60,32 @@ public:
                    << "│";
         }
         stream << std::endl;
+        stream << line("╞", "╡", "╪", "═") << std::endl;
+    }
 
-        stream << middle_border << std::endl;
+    template <typename Stream>
+    void print(Stream &stream)
+    {
+        stream << line("┌", "┐", "┬", "─") << std::endl;
+        if (headers.size() > 0)
+            print_header<Stream>(stream);
 
-        for (auto &row : data)
+        for (size_t i = 0, j = 0; i < data.size(); ++i)
         {
+            while (j < special_lines.size() && i == special_lines[j].first)
+                stream << special_lines[j++].second << std::endl;
             stream << "│";
             std::experimental::apply([&](auto &&...args)
                                      { ((stream << std::setw(width) << args << "│"), ...); },
-                                     row);
+                                     data[i]);
             stream << std::endl;
         }
-
-        stream << bottom_border << std::endl;
+        stream << line("└", "┘", "┴", "─") << std::endl;
     }
 
-    void add(Ts... args) { data.emplace_back(args...); }
+    void add_row(Ts... args) { data.emplace_back(args...); }
+    void add_divider() { special_lines.emplace_back(data.size(), line("├", "┤", "┼", "─")); }
+    void add_empty_row() { special_lines.emplace_back(data.size(), line("│", "│", "│", " ")); }
 };
 
 #endif // __UTILS_HPP__

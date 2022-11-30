@@ -69,7 +69,7 @@ public:
     void match(uint64_t ref_price = 0, uint64_t timestamp = 0);
     void match_call_auction(uint64_t timestamp = 0);
 
-    void show();
+    void show(size_t n = 10);
     void show_transactions(size_t n = 10);
 
     size_t load(const std::string &filename, bool header = true);
@@ -340,20 +340,36 @@ void LimitOrderBook::match_call_auction(uint64_t timestamp)
     match(ref_price, timestamp);
 }
 
-void LimitOrderBook::show() // TODO: better show function
+void LimitOrderBook::show(size_t n)
 {
-    std::cout << "Side::Bid:" << std::endl;
-    std::cout << *bid_limits << std::endl;
+    auto table = Table<std::string, uint64_t>({"Price", "Quantity"});
 
-    std::cout << "Side::Ask:" << std::endl;
-    std::cout << *ask_limits << std::endl;
+    auto topk_ask_price = get_topk_ask_price(n);
+    auto topk_ask_volume = get_topk_ask_volume(n);
+    for (size_t i = 0; i < n - topk_ask_price.size(); i++)
+        table.add_empty_row();
+    for (size_t i = topk_ask_price.size(); i > 0; --i)
+        table.add_row(int2string(double2int(topk_ask_price[i - 1])), topk_ask_volume[i - 1]);
+
+    table.add_divider();
+    table.add_empty_row();
+    table.add_divider();
+
+    auto topk_bid_price = get_topk_bid_price(n);
+    auto topk_bid_volume = get_topk_bid_volume(n);
+    for (size_t i = 0; i < topk_bid_price.size(); i++)
+        table.add_row(int2string(double2int(topk_bid_price[i])), topk_bid_volume[i]);
+    for (size_t i = 0; i < n - topk_bid_price.size(); i++)
+        table.add_empty_row();
+
+    table.print(std::cout);
 }
 
 void LimitOrderBook::show_transactions(size_t n)
 {
     auto table = Table<std::string, std::string, uint64_t>({"Timestamp", "Price", "Quantity"});
     for (auto it = transactions.rbegin(); it != transactions.rend() && n > 0; ++it, --n)
-        table.add(strftime(it->timestamp, "%H:%M:%S"), int2string(it->price), it->quantity);
+        table.add_row(strftime(it->timestamp, "%H:%M:%S"), int2string(it->price), it->quantity);
     table.print(std::cout);
 }
 
