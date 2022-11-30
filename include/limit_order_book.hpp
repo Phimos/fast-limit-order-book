@@ -40,6 +40,14 @@ class LimitOrderBook
 
     inline uint64_t double2int(double value) { return (uint64_t)(value * scale_up); }
     inline double int2double(uint64_t value) { return (double)value * scale_down; }
+    inline std::string int2string(uint64_t value)
+    {
+        uint64_t scale = (uint64_t)pow(10, decimal_places);
+        std::string integer_part = std::to_string(value / scale);
+        std::string fractional_part = std::to_string(value % scale);
+        fractional_part = std::string(decimal_places - fractional_part.size(), '0') + fractional_part;
+        return integer_part + "." + fractional_part;
+    }
 
 public:
     LimitOrderBook(size_t decimal_places = 2)
