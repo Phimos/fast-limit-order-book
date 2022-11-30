@@ -170,6 +170,7 @@ struct TradingRule
 {
     typedef std::tuple<TradingStatus, uint64_t, uint64_t> Status;
     std::vector<Status> status;
+    TradingRule() {}
     TradingRule(std::vector<Status> status) : status(status) {}
 };
 

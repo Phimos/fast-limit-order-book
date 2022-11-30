@@ -18,6 +18,7 @@
 class LimitOrderBook
 {
     TradingStatus status = TradingStatus::ContinuousTrading;
+    TradingRule rule;
     size_t decimal_places;
     double scale_up, scale_down;
 
@@ -66,6 +67,8 @@ public:
     void set_status(TradingStatus status) { this->status = status; }
     void set_status(const std::string &status);
 
+    void set_trading_rule(const TradingRule &trading_rule) { this->rule = trading_rule; }
+
     void match(uint64_t ref_price = 0, uint64_t timestamp = 0);
     void match_call_auction(uint64_t timestamp = 0);
 
@@ -73,7 +76,7 @@ public:
     void show_transactions(size_t n = 10);
 
     size_t load(const std::string &filename, bool header = true);
-    void until(uint64_t hour = 24, uint64_t minute = 0, uint64_t second = 0, uint64_t millisecond = 0);
+    void until(uint64_t hour = 24, uint64_t minute = 0, uint64_t second = 0, uint64_t millisecond = 0); // TODO: only accept 1 argument
 
     std::vector<Transaction> get_transactions() const { return std::vector<Transaction>(transactions.begin(), transactions.end()); }
 
