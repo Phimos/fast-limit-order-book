@@ -29,7 +29,8 @@ PYBIND11_MODULE(flob, m)
         .def("get_kth_bid_volume", &LimitOrderBook::get_kth_bid_volume, py::arg("k"))
         .def("get_kth_ask_volume", &LimitOrderBook::get_kth_ask_volume, py::arg("k"))
         .def("get_transactions", &LimitOrderBook::get_transactions)
-        .def("show", &LimitOrderBook::show);
+        .def("show", &LimitOrderBook::show)
+        .def("show_transactions", &LimitOrderBook::show_transactions, py::arg("n") = 10);
 
     py::class_<Quote>(m, "Quote")
         .def(py::init<uint64_t, uint64_t, uint64_t, uint64_t, Side, QuoteType>(),

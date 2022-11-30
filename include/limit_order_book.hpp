@@ -70,6 +70,7 @@ public:
     void match_call_auction(uint64_t timestamp = 0);
 
     void show();
+    void show_transactions(size_t n = 10);
 
     size_t load(const std::string &filename, bool header = true);
     void until(uint64_t hour = 24, uint64_t minute = 0, uint64_t second = 0, uint64_t millisecond = 0);
@@ -346,6 +347,14 @@ void LimitOrderBook::show() // TODO: better show function
 
     std::cout << "Side::Ask:" << std::endl;
     std::cout << *ask_limits << std::endl;
+}
+
+void LimitOrderBook::show_transactions(size_t n)
+{
+    auto table = Table<std::string, std::string, uint64_t>({"Timestamp", "Price", "Quantity"});
+    for (auto it = transactions.rbegin(); it != transactions.rend() && n > 0; ++it, --n)
+        table.add(strftime(it->timestamp, "%H:%M:%S"), int2string(it->price), it->quantity);
+    table.print(std::cout);
 }
 
 size_t LimitOrderBook::load(const std::string &filename, bool header)
