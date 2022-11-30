@@ -355,7 +355,6 @@ void LimitOrderBook::show(size_t n)
         table.add_row(int2string(double2int(topk_ask_price[i - 1])), topk_ask_volume[i - 1]);
 
     table.add_divider();
-    table.add_empty_row();
     table.add_divider();
 
     auto topk_bid_price = get_topk_bid_price(n);
@@ -371,8 +370,8 @@ void LimitOrderBook::show(size_t n)
 void LimitOrderBook::show_transactions(size_t n)
 {
     auto table = Table<std::string, std::string, uint64_t>({"Timestamp", "Price", "Quantity"});
-    for (auto it = transactions.rbegin(); it != transactions.rend() && n > 0; ++it, --n)
-        table.add_row(strftime(it->timestamp, "%H:%M:%S"), int2string(it->price), it->quantity);
+    for (size_t i = std::max(0, (int)transactions.size() - (int)n); i < transactions.size(); ++i)
+        table.add_row(strftime(transactions[i].timestamp, "%H:%M:%S"), int2string(double2int(transactions[i].price)), transactions[i].quantity);
     table.print(std::cout);
 }
 

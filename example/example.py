@@ -27,7 +27,7 @@ lob.show()
 # Morning session
 lob.set_status("ContinuousTrading")
 lob.until(*MORNING_SESSION_END)
-lob.show()
+lob.show_transactions()
 
 # Afternoon session
 lob.until(*AFTERNOON_SESSION_END)
