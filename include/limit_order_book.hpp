@@ -371,7 +371,7 @@ void LimitOrderBook::show_transactions(size_t n)
 {
     auto table = Table<std::string, std::string, uint64_t>({"Timestamp", "Price", "Quantity"});
     for (size_t i = std::max(0, (int)transactions.size() - (int)n); i < transactions.size(); ++i)
-        table.add_row(strftime(transactions[i].timestamp, "%H:%M:%S"), int2string(double2int(transactions[i].price)), transactions[i].quantity);
+        table.add_row(strftime(transactions[i].timestamp, "%H:%M:%S"), int2string(transactions[i].price), transactions[i].quantity);
     table.print(std::cout);
 }
 
