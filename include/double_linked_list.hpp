@@ -21,7 +21,7 @@ class DoubleLinkedList
 public:
     size_t size;
     std::shared_ptr<ListNode<T>> head, tail;
-    DoubleLinkedList() : head(nullptr), tail(nullptr), size(0) {}
+    DoubleLinkedList() : size(0), head(nullptr), tail(nullptr) {}
     inline bool empty() { return size == 0; }
     void push_back(const T &value);
     void push_front(const T &value);
