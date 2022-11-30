@@ -6,6 +6,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <iomanip>
 #include <utility>
 #include <experimental/tuple>
 
@@ -27,57 +28,56 @@ class Table
     typedef std::tuple<Ts...> DataTuple;
     std::vector<DataTuple> data;
     std::vector<std::string> headers;
-    size_t width;
+    size_t width, num_columns;
 
 public:
     Table(std::vector<std::string> headers = {}, size_t width = 20)
-        : headers(headers), width(width) {}
+        : headers(headers), width(width), num_columns(sizeof...(Ts)) {}
+
+    std::string line(std::string left, std::string right, std::string sep, std::string fill)
+    {
+        assert(fill.size() == 1);
+        std::string cell;
+        for (size_t i = 0; i < width; ++i)
+            cell += fill;
+        std::string line = left + cell;
+        for (size_t i = 1; i < num_columns; ++i)
+            line += sep + cell;
+        line += right;
+        return line;
+    }
 
     template <typename Stream>
     void print(Stream &stream)
     {
-        stream << "┌";
-        for (size_t i = 0; i < headers.size(); ++i)
-        {
-            stream << std::string(width, '─');
-            if (i != headers.size() - 1)
-                stream << "┬";
-        }
-        stream << "┐";
+        std::string top_border = line("┌", "┐", "┬", "─");
+        std::string middle_border = line("╞", "╡", "╪", "═");
+        std::string bottom_border = line("└", "┘", "┴", "─");
+
+        stream << top_border << std::endl;
 
         stream << "│";
         for (size_t i = 0; i < headers.size(); i++)
         {
-            stream << headers[i] << std::string(width - headers[i].size(), ' ') << "│";
+            stream << std::string((width - headers[i].size()) / 2, ' ')
+                   << headers[i]
+                   << std::string((width - headers[i].size() + 1) / 2, ' ')
+                   << "│";
         }
         stream << std::endl;
 
-        stream << "╞";
-        for (size_t i = 0; i < headers.size(); ++i)
-        {
-            stream << std::string(width, '═');
-            if (i != headers.size() - 1)
-                stream << "╪";
-        }
-        stream << "╡" << std::endl;
+        stream << middle_border << std::endl;
 
         for (auto &row : data)
         {
             stream << "│";
             std::experimental::apply([&](auto &&...args)
-                                     { ((stream << args << std::string(width - std::to_string(args).size(), ' ') << '│'), ...); },
+                                     { ((stream << std::setw(width) << args << "│"), ...); },
                                      row);
             stream << std::endl;
         }
 
-        stream << "└";
-        for (size_t i = 0; i < headers.size(); ++i)
-        {
-            stream << std::string(width, '─');
-            if (i != headers.size() - 1)
-                stream << "┴";
-        }
-        stream << "┘" << std::endl;
+        stream << bottom_border << std::endl;
     }
 
     void add(Ts... args) { data.emplace_back(args...); }
