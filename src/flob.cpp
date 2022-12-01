@@ -64,9 +64,6 @@ PYBIND11_MODULE(flob, m)
         .value("ContinuousTrading", TradingStatus::ContinuousTrading)
         .value("Closed", TradingStatus::Closed);
 
-    py::class_<TradingRule>(m, "TradingRule")
-        .def(py::init<std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>>>());
-
     py::enum_<Side>(m, "Side")
         .value("Bid", Side::Bid)
         .value("Ask", Side::Ask)

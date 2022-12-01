@@ -169,12 +169,4 @@ struct Transaction
         : bid_uid(bid_uid), ask_uid(ask_uid), price(price), quantity(quantity), timestamp(timestamp), real_price(real_price) {}
 };
 
-struct TradingRule
-{
-    typedef std::tuple<TradingStatus, uint64_t, uint64_t> Status;
-    std::vector<Status> status;
-    TradingRule() {}
-    TradingRule(std::vector<Status> status) : status(status) {}
-};
-
 #endif // __STRUCT_HPP__

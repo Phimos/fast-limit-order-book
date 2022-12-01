@@ -1,12 +1,11 @@
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup
 
-# include_path: include/
-# source_path: src/
 ext_modules = [Pybind11Extension("flob", ["src/flob.cpp"], include_dirs=["include"])]
 
 setup(
     name="flob",
+    version="1.0.0",
     description="fast-limit-order-book",
     author="Yunchong Gan",
     author_email="ganyunchong@gmail.com",
