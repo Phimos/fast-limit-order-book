@@ -156,7 +156,8 @@ enum TradingStatus
 {
     CallAuction,
     ContinuousTrading,
-    Closed
+    Closed,
+    Snapshot
 };
 
 struct Transaction
@@ -167,6 +168,21 @@ struct Transaction
     const double real_price;
     Transaction(uint64_t bid_uid, uint64_t ask_uid, uint64_t price, uint64_t quantity, uint64_t timestamp, double real_price)
         : bid_uid(bid_uid), ask_uid(ask_uid), price(price), quantity(quantity), timestamp(timestamp), real_price(real_price) {}
+};
+
+struct Tick
+{
+    const uint64_t timestamp;
+    const double open, high, low, close;
+    const uint64_t volume;
+    const double amount;
+    const std::vector<double> bid_prices, ask_prices;
+    const std::vector<uint64_t> bid_volumes, ask_volumes;
+    Tick(uint64_t timestamp, double open, double high, double low, double close, uint64_t volume, double amount,
+         const std::vector<double> &bid_prices, const std::vector<double> &ask_prices,
+         const std::vector<uint64_t> &bid_volumes, const std::vector<uint64_t> &ask_volumes)
+        : timestamp(timestamp), open(open), high(high), low(low), close(close), volume(volume), amount(amount),
+          bid_prices(bid_prices), ask_prices(ask_prices), bid_volumes(bid_volumes), ask_volumes(ask_volumes) {}
 };
 
 #endif // __STRUCT_HPP__

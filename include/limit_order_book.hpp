@@ -30,10 +30,12 @@ class LimitOrderBook
     std::unordered_map<uint64_t, std::shared_ptr<Order>> uid_order_map;
 
     std::deque<Transaction> transactions;
+    std::deque<Tick> ticks;
     std::deque<Quote> quotes;
 
-    uint64_t open, high, low, close, volume;
-    uint64_t start_of_day;
+    uint64_t open, high, low, close, volume, amount;
+    size_t topk;
+    uint64_t start_of_day, snapshot_gap;
 
     void write_limit_order(const Quote &quote);
     void write_market_order(const Quote &quote);
@@ -59,7 +61,7 @@ class LimitOrderBook
     inline uint64_t shift_timestamp(uint64_t timestamp) { return timestamp < nanoseconds_per_day ? timestamp + start_of_day : timestamp; }
 
 public:
-    LimitOrderBook(size_t decimal_places = 2)
+    LimitOrderBook(size_t decimal_places = 2, uint64_t snapshot_gap = 0, size_t topk = 5)
         : decimal_places(decimal_places),
           scale_up(std::pow(10, decimal_places)),
           scale_down(1.0 / scale_up),
@@ -67,8 +69,9 @@ public:
           ask_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           bid_best_limit(nullptr),
           ask_best_limit(nullptr),
-          open(0), high(0), low(0), close(0), volume(0),
-          start_of_day(0) {}
+          open(0), high(0), low(0), close(0), volume(0), amount(0),
+          topk(topk),
+          start_of_day(0), snapshot_gap(0) {}
     void clear();
     void write(const Quote &quote);
     void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price = 0, uint64_t timestamp = 0);
@@ -76,6 +79,7 @@ public:
     void set_status(TradingStatus status) { this->status = status; }
     void set_status(const std::string &status);
     void set_schedule(const std::vector<TradingHour> &schedule) { this->schedule = schedule; }
+    void set_snapshot_gap(uint64_t snapshot_gap) { this->snapshot_gap = snapshot_gap; }
 
     void match(uint64_t ref_price = 0, uint64_t timestamp = 0);
     void match_call_auction(uint64_t timestamp = 0);
@@ -88,11 +92,12 @@ public:
     void run();
 
     std::vector<Transaction> get_transactions() const { return std::vector<Transaction>(transactions.begin(), transactions.end()); }
+    std::vector<Tick> get_ticks() const { return std::vector<Tick>(ticks.begin(), ticks.end()); }
 
-    std::vector<double> get_topk_bid_price(size_t k);
-    std::vector<double> get_topk_ask_price(size_t k);
-    std::vector<uint64_t> get_topk_bid_volume(size_t k);
-    std::vector<uint64_t> get_topk_ask_volume(size_t k);
+    std::vector<double> get_topk_bid_price(size_t k, bool fill = false);
+    std::vector<double> get_topk_ask_price(size_t k, bool fill = false);
+    std::vector<uint64_t> get_topk_bid_volume(size_t k, bool fill = false);
+    std::vector<uint64_t> get_topk_ask_volume(size_t k, bool fill = false);
     double get_kth_bid_price(size_t k);
     double get_kth_ask_price(size_t k);
     uint64_t get_kth_bid_volume(size_t k);
@@ -112,6 +117,21 @@ void LimitOrderBook::on_period_end(TradingStatus status, uint64_t timestamp)
         match_call_auction(timestamp);
         break;
 
+    case TradingStatus::Snapshot:
+        ticks.emplace_back(timestamp,
+                           open == 0 ? std::nan("") : int2double(open),
+                           high == 0 ? std::nan("") : int2double(high),
+                           low == 0 ? std::nan("") : int2double(low),
+                           close == 0 ? std::nan("") : int2double(close),
+                           volume,
+                           amount == 0 ? std::nan("") : int2double(amount),
+                           get_topk_bid_price(topk, true),
+                           get_topk_ask_price(topk, true),
+                           get_topk_bid_volume(topk, true),
+                           get_topk_ask_volume(topk, true));
+        open = high = low = close = volume = amount = 0;
+        break;
+
     default:
         break;
     }
@@ -125,39 +145,51 @@ void LimitOrderBook::execute(std::tuple<TradingStatus, uint64_t, uint64_t> &peri
     on_period_end(std::get<0>(period), shift_timestamp(std::get<2>(period)));
 }
 
-std::vector<double> LimitOrderBook::get_topk_bid_price(size_t k)
+std::vector<double> LimitOrderBook::get_topk_bid_price(size_t k, bool fill)
 {
     auto nodes = bid_limits->nlargest(k);
     std::vector<double> prices;
     for (auto &node : nodes)
         prices.push_back(int2double(node->value().price));
+    if (fill)
+        while (prices.size() < k)
+            prices.push_back(std::nan(""));
     return prices;
 }
 
-std::vector<double> LimitOrderBook::get_topk_ask_price(size_t k)
+std::vector<double> LimitOrderBook::get_topk_ask_price(size_t k, bool fill)
 {
     auto nodes = ask_limits->nsmallest(k);
     std::vector<double> prices;
     for (auto &node : nodes)
         prices.push_back(int2double(node->value().price));
+    if (fill)
+        while (prices.size() < k)
+            prices.push_back(std::nan(""));
     return prices;
 }
 
-std::vector<uint64_t> LimitOrderBook::get_topk_bid_volume(size_t k)
+std::vector<uint64_t> LimitOrderBook::get_topk_bid_volume(size_t k, bool fill)
 {
     auto nodes = bid_limits->nlargest(k);
     std::vector<uint64_t> quantities;
     for (auto &node : nodes)
         quantities.push_back(node->value().quantity);
+    if (fill)
+        while (quantities.size() < k)
+            quantities.push_back(0);
     return quantities;
 }
 
-std::vector<uint64_t> LimitOrderBook::get_topk_ask_volume(size_t k)
+std::vector<uint64_t> LimitOrderBook::get_topk_ask_volume(size_t k, bool fill)
 {
     auto nodes = ask_limits->nsmallest(k);
     std::vector<uint64_t> quantities;
     for (auto &node : nodes)
         quantities.push_back(node->value().quantity);
+    if (fill)
+        while (quantities.size() < k)
+            quantities.push_back(0);
     return quantities;
 }
 
@@ -320,6 +352,7 @@ void LimitOrderBook::track_transaction(const Transaction &transaction)
     low = low == 0 ? transaction.price : std::min(low, transaction.price);
     close = transaction.price;
     volume += transaction.quantity;
+    amount += transaction.price * transaction.quantity;
 }
 
 void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price, uint64_t timestamp)
@@ -464,6 +497,37 @@ void LimitOrderBook::until(uint64_t timestamp)
 
 void LimitOrderBook::run()
 {
+    if (snapshot_gap != 0)
+    {
+        std::vector<TradingHour> tmp(schedule.begin(), schedule.end());
+        schedule.clear();
+        for (auto &period : schedule)
+        {
+            if (std::get<0>(period) == TradingStatus::CallAuction)
+            {
+                schedule.emplace_back(TradingStatus::CallAuction, std::get<1>(period), std::get<2>(period));
+                schedule.emplace_back(TradingStatus::Snapshot, std::get<2>(period), std::get<2>(period));
+            }
+            else if (std::get<0>(period) == TradingStatus::ContinuousTrading)
+            {
+                for (uint64_t t = std::get<1>(period); t < std::get<2>(period); t += snapshot_gap)
+                {
+                    schedule.emplace_back(TradingStatus::ContinuousTrading, t, t + snapshot_gap);
+                    schedule.emplace_back(TradingStatus::Snapshot, t + snapshot_gap, t + snapshot_gap);
+                }
+                if ((std::get<2>(period) - std::get<1>(period)) % snapshot_gap != 0)
+                {
+                    schedule.emplace_back(TradingStatus::ContinuousTrading, std::get<2>(period) - (std::get<2>(period) - std::get<1>(period)) % snapshot_gap, std::get<2>(period));
+                    schedule.emplace_back(TradingStatus::Snapshot, std::get<2>(period), std::get<2>(period));
+                }
+            }
+            else
+            {
+                schedule.emplace_back(std::get<0>(period), std::get<1>(period), std::get<2>(period));
+            }
+        }
+    }
+
     for (auto &period : schedule)
         execute(period);
 }

@@ -11,25 +11,30 @@ PYBIND11_MODULE(flob, m)
     m.doc() = "fast-limit-order-book";
 
     py::class_<LimitOrderBook>(m, "LimitOrderBook")
-        .def(py::init<size_t>(), py::arg("decimal_places") = 2)
+        .def(py::init<size_t, uint64_t, size_t>(),
+             py::arg("decimal_places") = 2,
+             py::arg("snapshot_gap") = 0,
+             py::arg("topk") = 5)
         .def("clear", &LimitOrderBook::clear)
         .def("write", &LimitOrderBook::write, py::arg("quote"))
         .def("set_status", py::overload_cast<TradingStatus>(&LimitOrderBook::set_status), py::arg("status"))
         .def("set_status", py::overload_cast<const std::string &>(&LimitOrderBook::set_status), py::arg("status"))
         .def("set_schedule", &LimitOrderBook::set_schedule, py::arg("schedule"))
+        .def("set_snapshot_gap", &LimitOrderBook::set_snapshot_gap, py::arg("snapshot_gap"))
         .def("load", &LimitOrderBook::load, py::arg("filename"), py::arg("header") = true)
         .def("until", &LimitOrderBook::until, py::arg("timestamp"))
         .def("run", &LimitOrderBook::run)
         .def("match_call_auction", &LimitOrderBook::match_call_auction, py::arg("timestamp") = 0)
-        .def("get_topk_bid_price", &LimitOrderBook::get_topk_bid_price, py::arg("k"))
-        .def("get_topk_ask_price", &LimitOrderBook::get_topk_ask_price, py::arg("k"))
-        .def("get_topk_bid_volume", &LimitOrderBook::get_topk_bid_volume, py::arg("k"))
-        .def("get_topk_ask_volume", &LimitOrderBook::get_topk_ask_volume, py::arg("k"))
+        .def("get_topk_bid_price", &LimitOrderBook::get_topk_bid_price, py::arg("k"), py::arg("fill") = false)
+        .def("get_topk_ask_price", &LimitOrderBook::get_topk_ask_price, py::arg("k"), py::arg("fill") = false)
+        .def("get_topk_bid_volume", &LimitOrderBook::get_topk_bid_volume, py::arg("k"), py::arg("fill") = false)
+        .def("get_topk_ask_volume", &LimitOrderBook::get_topk_ask_volume, py::arg("k"), py::arg("fill") = false)
         .def("get_kth_bid_price", &LimitOrderBook::get_kth_bid_price, py::arg("k"))
         .def("get_kth_ask_price", &LimitOrderBook::get_kth_ask_price, py::arg("k"))
         .def("get_kth_bid_volume", &LimitOrderBook::get_kth_bid_volume, py::arg("k"))
         .def("get_kth_ask_volume", &LimitOrderBook::get_kth_ask_volume, py::arg("k"))
         .def("get_transactions", &LimitOrderBook::get_transactions)
+        .def("get_ticks", &LimitOrderBook::get_ticks)
         .def("show", &LimitOrderBook::show, py::arg("n") = 10)
         .def("show_transactions", &LimitOrderBook::show_transactions, py::arg("n") = 10);
 
@@ -50,6 +55,14 @@ PYBIND11_MODULE(flob, m)
         .def_readonly("price", &Transaction::real_price)
         .def_readonly("quantity", &Transaction::quantity)
         .def_readonly("timestamp", &Transaction::timestamp);
+
+    py::class_<Tick>(m, "Tick")
+        .def_readonly("open", &Tick::open)
+        .def_readonly("high", &Tick::high)
+        .def_readonly("low", &Tick::low)
+        .def_readonly("close", &Tick::close)
+        .def_readonly("volume", &Tick::volume)
+        .def_readonly("amount", &Tick::amount);
 
     py::enum_<QuoteType>(m, "QuoteType")
         .value("LimitOrder", QuoteType::LimitOrder)
