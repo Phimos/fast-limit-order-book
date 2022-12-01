@@ -4,7 +4,7 @@ import flob
 from flob import LimitOrderBook
 
 PRE_OPENING_SESSION_START = pd.Timedelta("09:15:00")
-PRE_OPENING_SESSION_END = pd.Timedelta("09:30:00")
+PRE_OPENING_SESSION_END = pd.Timedelta("09:25:00")
 
 MORNING_SESSION_START = pd.Timedelta("09:30:00")
 MORNING_SESSION_END = pd.Timedelta("11:30:00")
@@ -48,7 +48,7 @@ lob.load("data/sample.csv")
 # Pre-opening session
 lob.set_status("CallAuction")
 lob.until(PRE_OPENING_SESSION_END.value)
-lob.match_call_auction()
+lob.match_call_auction(PRE_OPENING_SESSION_END.value)
 lob.show()
 
 # Morning session
@@ -64,7 +64,7 @@ lob.show()
 lob.set_status("CallAuction")
 lob.until(CLOSING_SESSION_END.value)
 lob.show()
-lob.match_call_auction()
+lob.match_call_auction(CLOSING_SESSION_END.value)
 lob.show()
 
 transactions = lob.get_transactions()
