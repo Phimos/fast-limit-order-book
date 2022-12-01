@@ -17,8 +17,10 @@
 
 class LimitOrderBook
 {
+    typedef std::tuple<TradingStatus, uint64_t, uint64_t> TradingHour;
+
     TradingStatus status = TradingStatus::ContinuousTrading;
-    TradingRule rule;
+    std::vector<TradingHour> schedule;
     size_t decimal_places;
     double scale_up, scale_down;
 
@@ -31,6 +33,7 @@ class LimitOrderBook
     std::deque<Quote> quotes;
 
     uint64_t open, high, low, close, volume;
+    uint64_t start_of_day;
 
     void write_limit_order(const Quote &quote);
     void write_market_order(const Quote &quote);
@@ -38,6 +41,10 @@ class LimitOrderBook
     void write_cancel_order(const Quote &quote);
     void write_fill_order(const Quote &quote);
     void track_transaction(const Transaction &transaction);
+
+    void on_period_start(TradingStatus status, uint64_t timestamp);
+    void on_period_end(TradingStatus status, uint64_t timestamp);
+    void execute(std::tuple<TradingStatus, uint64_t, uint64_t> &period);
 
     inline uint64_t double2int(double value) { return (uint64_t)(value * scale_up); }
     inline double int2double(uint64_t value) { return (double)value * scale_down; }
@@ -49,6 +56,7 @@ class LimitOrderBook
         fractional_part = std::string(decimal_places - fractional_part.size(), '0') + fractional_part;
         return integer_part + "." + fractional_part;
     }
+    inline uint64_t shift_timestamp(uint64_t timestamp) { return timestamp < nanoseconds_per_day ? timestamp + start_of_day : timestamp; }
 
 public:
     LimitOrderBook(size_t decimal_places = 2)
@@ -59,14 +67,15 @@ public:
           ask_limits(std::make_shared<Treap<Limit>>(Treap<Limit>())),
           bid_best_limit(nullptr),
           ask_best_limit(nullptr),
-          open(0), high(0), low(0), close(0), volume(0) {}
+          open(0), high(0), low(0), close(0), volume(0),
+          start_of_day(0) {}
     void clear();
     void write(const Quote &quote);
     void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price = 0, uint64_t timestamp = 0);
 
     void set_status(TradingStatus status) { this->status = status; }
     void set_status(const std::string &status);
-    void set_rule(const TradingRule &rule) { this->rule = rule; }
+    void set_schedule(const std::vector<TradingHour> &schedule) { this->schedule = schedule; }
 
     void match(uint64_t ref_price = 0, uint64_t timestamp = 0);
     void match_call_auction(uint64_t timestamp = 0);
@@ -89,6 +98,31 @@ public:
     uint64_t get_kth_bid_volume(size_t k);
     uint64_t get_kth_ask_volume(size_t k);
 };
+
+void LimitOrderBook::on_period_start(TradingStatus status, uint64_t timestamp)
+{
+    ;
+}
+
+void LimitOrderBook::on_period_end(TradingStatus status, uint64_t timestamp)
+{
+    switch (status)
+    {
+    case TradingStatus::CallAuction:
+        match_call_auction(timestamp);
+        break;
+
+    default:
+        break;
+    }
+}
+
+void LimitOrderBook::execute(std::tuple<TradingStatus, uint64_t, uint64_t> &period)
+{
+    on_period_start(std::get<0>(period), shift_timestamp(std::get<1>(period)));
+    until(std::get<2>(period));
+    on_period_end(std::get<0>(period), shift_timestamp(std::get<2>(period)));
+}
 
 std::vector<double> LimitOrderBook::get_topk_bid_price(size_t k)
 {
@@ -409,6 +443,7 @@ size_t LimitOrderBook::load(const std::string &filename, bool header)
 
         quotes.emplace_back(uid, price, quantity, timestamp, side, type);
     }
+    start_of_day = quotes.empty() ? 0 : quotes.front().timestamp - quotes.front().timestamp % nanoseconds_per_day;
     std::cout << "read " << quotes.size() << " quotes" << std::endl;
     return quotes.size();
 }
@@ -428,13 +463,8 @@ void LimitOrderBook::until(uint64_t timestamp)
 
 void LimitOrderBook::run()
 {
-    for (auto &[status, start, end] : rule.status)
-    {
-        set_status(TradingStatus::Closed);
-        until(start);
-        set_status(status);
-        until(end);
-    }
+    for (auto &period : schedule)
+        execute(period);
 }
 
 #endif // __LIMIT_ORDER_BOOK_HPP__
