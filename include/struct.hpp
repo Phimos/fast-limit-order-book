@@ -154,7 +154,7 @@ enum TradingStatus
 {
     CallAuction,
     ContinuousTrading,
-    ClosingAuction
+    Closed
 };
 
 struct Transaction

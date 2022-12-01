@@ -15,6 +15,32 @@ CLOSING_SESSION_START = pd.Timedelta("14:57:00")
 CLOSING_SESSION_END = pd.Timedelta("15:00:00")
 
 
+rule = flob.TradingRule(
+    [
+        (
+            flob.TradingStatus.CallAuction,
+            PRE_OPENING_SESSION_START.value,
+            PRE_OPENING_SESSION_END.value,
+        ),
+        (
+            flob.TradingStatus.ContinuousTrading,
+            MORNING_SESSION_START.value,
+            MORNING_SESSION_END.value,
+        ),
+        (
+            flob.TradingStatus.ContinuousTrading, 
+            AFTERNOON_SESSION_START.value,
+            AFTERNOON_SESSION_END.value,
+        ),
+        (
+            flob.TradingStatus.CallAuction,
+            CLOSING_SESSION_START.value,
+            CLOSING_SESSION_END.value,
+        ),
+    ]
+)
+
+
 lob = LimitOrderBook()
 lob.load("data/sample.csv")
 

@@ -66,8 +66,7 @@ public:
 
     void set_status(TradingStatus status) { this->status = status; }
     void set_status(const std::string &status);
-
-    void set_trading_rule(const TradingRule &trading_rule) { this->rule = trading_rule; }
+    void set_rule(const TradingRule &rule) { this->rule = rule; }
 
     void match(uint64_t ref_price = 0, uint64_t timestamp = 0);
     void match_call_auction(uint64_t timestamp = 0);
@@ -77,6 +76,7 @@ public:
 
     size_t load(const std::string &filename, bool header = true);
     void until(uint64_t timestamp);
+    void run();
 
     std::vector<Transaction> get_transactions() const { return std::vector<Transaction>(transactions.begin(), transactions.end()); }
 
@@ -423,6 +423,17 @@ void LimitOrderBook::until(uint64_t timestamp)
     {
         write(quotes.front());
         quotes.pop_front();
+    }
+}
+
+void LimitOrderBook::run()
+{
+    for (auto &[status, start, end] : rule.status)
+    {
+        set_status(TradingStatus::Closed);
+        until(start);
+        set_status(status);
+        until(end);
     }
 }
 

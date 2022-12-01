@@ -16,6 +16,7 @@ PYBIND11_MODULE(flob, m)
         .def("write", &LimitOrderBook::write, py::arg("quote"))
         .def("set_status", py::overload_cast<TradingStatus>(&LimitOrderBook::set_status), py::arg("status"))
         .def("set_status", py::overload_cast<const std::string &>(&LimitOrderBook::set_status), py::arg("status"))
+        .def("set_rule", &LimitOrderBook::set_rule, py::arg("rule"))
         .def("load", &LimitOrderBook::load, py::arg("filename"), py::arg("header") = true)
         .def("until", &LimitOrderBook::until, py::arg("timestamp"))
         .def("match_call_auction", &LimitOrderBook::match_call_auction, py::arg("timestamp") = 0)
@@ -63,7 +64,7 @@ PYBIND11_MODULE(flob, m)
     py::enum_<TradingStatus>(m, "TradingStatus")
         .value("CallAuction", TradingStatus::CallAuction)
         .value("ContinuousTrading", TradingStatus::ContinuousTrading)
-        .value("ClosingAuction", TradingStatus::ClosingAuction);
+        .value("Closed", TradingStatus::Closed);
 
     py::class_<TradingRule>(m, "TradingRule")
         .def(py::init<std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>>>());
