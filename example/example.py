@@ -1,5 +1,6 @@
 import pandas as pd
 
+import flob
 from flob import LimitOrderBook
 
 PRE_OPENING_SESSION_START = pd.Timedelta("09:15:00")
@@ -28,7 +29,7 @@ rule = flob.TradingRule(
             MORNING_SESSION_END.value,
         ),
         (
-            flob.TradingStatus.ContinuousTrading, 
+            flob.TradingStatus.ContinuousTrading,
             AFTERNOON_SESSION_START.value,
             AFTERNOON_SESSION_END.value,
         ),
