@@ -45,12 +45,9 @@ PYBIND11_MODULE(flob, m)
         .def_readonly("type", &Quote::type);
 
     py::class_<Transaction>(m, "Transaction")
-        .def(py::init<uint64_t, uint64_t, uint64_t, uint64_t, uint64_t>(),
-             py::arg("bid_uid"), py::arg("ask_uid"), py::arg("price"),
-             py::arg("quantity"), py::arg("timestamp"))
         .def_readonly("bid_uid", &Transaction::bid_uid)
         .def_readonly("ask_uid", &Transaction::ask_uid)
-        .def_readonly("price", &Transaction::price)
+        .def_readonly("price", &Transaction::real_price)
         .def_readonly("quantity", &Transaction::quantity)
         .def_readonly("timestamp", &Transaction::timestamp);
 

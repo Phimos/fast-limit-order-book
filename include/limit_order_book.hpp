@@ -330,7 +330,7 @@ void LimitOrderBook::trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity
         price = ask_uid < bid_uid ? ask_order->price : bid_order->price;
     if (timestamp == 0)
         timestamp = std::max(ask_order->timestamp, bid_order->timestamp);
-    transactions.emplace_back(bid_uid, ask_uid, price, quantity, timestamp);
+    transactions.emplace_back(bid_uid, ask_uid, price, quantity, timestamp, int2double(price));
     track_transaction(transactions.back());
     write_fill_order(Quote(ask_uid, price, quantity, timestamp, Side::Ask, FillOrder));
     write_fill_order(Quote(bid_uid, price, quantity, timestamp, Side::Bid, FillOrder));
