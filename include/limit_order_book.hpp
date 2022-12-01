@@ -120,6 +120,7 @@ void LimitOrderBook::on_period_end(TradingStatus status, uint64_t timestamp)
 void LimitOrderBook::execute(std::tuple<TradingStatus, uint64_t, uint64_t> &period)
 {
     on_period_start(std::get<0>(period), shift_timestamp(std::get<1>(period)));
+    set_status(std::get<0>(period));
     until(std::get<2>(period));
     on_period_end(std::get<0>(period), shift_timestamp(std::get<2>(period)));
 }
