@@ -35,11 +35,11 @@ lob.run()
 transactions = lob.get_transactions()
 transactions = [
     {
+        "timestamp": item.timestamp,
         "bid_uid": item.bid_uid,
         "ask_uid": item.ask_uid,
         "price": item.price,
         "volume": item.quantity,
-        "timestamp": item.timestamp,
     }
     for item in transactions
 ]
