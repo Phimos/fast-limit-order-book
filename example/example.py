@@ -2,17 +2,17 @@ import pandas as pd
 
 from flob import LimitOrderBook
 
-PRE_OPENING_SESSION_START = (9, 15)
-PRE_OPENING_SESSION_END = (9, 25)
+PRE_OPENING_SESSION_START = pd.Timedelta("09:15:00")
+PRE_OPENING_SESSION_END = pd.Timedelta("09:30:00")
 
-MORNING_SESSION_START = (9, 30)
-MORNING_SESSION_END = (11, 30)
+MORNING_SESSION_START = pd.Timedelta("09:30:00")
+MORNING_SESSION_END = pd.Timedelta("11:30:00")
 
-AFTERNOON_SESSION_START = (13, 0)
-AFTERNOON_SESSION_END = (14, 57)
+AFTERNOON_SESSION_START = pd.Timedelta("13:00:00")
+AFTERNOON_SESSION_END = pd.Timedelta("14:57:00")
 
-CLOSING_SESSION_START = (14, 57)
-CLOSING_SESSION_END = (15, 0)
+CLOSING_SESSION_START = pd.Timedelta("14:57:00")
+CLOSING_SESSION_END = pd.Timedelta("15:00:00")
 
 
 lob = LimitOrderBook()
@@ -20,22 +20,22 @@ lob.load("data/sample.csv")
 
 # Pre-opening session
 lob.set_status("CallAuction")
-lob.until(*PRE_OPENING_SESSION_END)
+lob.until(PRE_OPENING_SESSION_END.value)
 lob.match_call_auction()
 lob.show()
 
 # Morning session
 lob.set_status("ContinuousTrading")
-lob.until(*MORNING_SESSION_END)
+lob.until(MORNING_SESSION_END.value)
 lob.show_transactions()
 
 # Afternoon session
-lob.until(*AFTERNOON_SESSION_END)
+lob.until(AFTERNOON_SESSION_END.value)
 lob.show()
 
 # Closing session
 lob.set_status("CallAuction")
-lob.until(*CLOSING_SESSION_END)
+lob.until(CLOSING_SESSION_END.value)
 lob.show()
 lob.match_call_auction()
 lob.show()

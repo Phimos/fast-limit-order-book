@@ -76,7 +76,7 @@ public:
     void show_transactions(size_t n = 10);
 
     size_t load(const std::string &filename, bool header = true);
-    void until(uint64_t hour = 24, uint64_t minute = 0, uint64_t second = 0, uint64_t millisecond = 0); // TODO: only accept 1 argument
+    void until(uint64_t timestamp);
 
     std::vector<Transaction> get_transactions() const { return std::vector<Transaction>(transactions.begin(), transactions.end()); }
 
@@ -413,12 +413,11 @@ size_t LimitOrderBook::load(const std::string &filename, bool header)
     return quotes.size();
 }
 
-void LimitOrderBook::until(uint64_t hour, uint64_t minute, uint64_t second, uint64_t millisecond)
+void LimitOrderBook::until(uint64_t timestamp)
 {
     const uint64_t oneday = 24UL * 60UL * 60UL * 1000000000UL; // unit: nanosecond
     if (quotes.empty())
         return;
-    uint64_t timestamp = 1000000UL * (millisecond + 1000UL * (second + 60UL * (minute + 60UL * hour)));
     timestamp = quotes.front().timestamp - (quotes.front().timestamp % oneday) + timestamp;
     while (!quotes.empty() && quotes.front().timestamp <= timestamp)
     {
