@@ -74,8 +74,7 @@ you can load quotes from a csv file and batch process them:
 ```python
 import pandas as pd
 
-import flob
-from flob import LimitOrderBook, Quote
+from flob import LimitOrderBook
 
 lob = LimitOrderBook(decimal_places=2)
 lob.load("data/sample.csv")
