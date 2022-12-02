@@ -25,10 +25,14 @@ PYBIND11_MODULE(flob, m)
         .def("until", &LimitOrderBook::until, py::arg("timestamp"))
         .def("run", &LimitOrderBook::run)
         .def("match_call_auction", &LimitOrderBook::match_call_auction, py::arg("timestamp") = 0)
-        .def("get_topk_bid_price", &LimitOrderBook::get_topk_bid_price, py::arg("k"), py::arg("fill") = false)
-        .def("get_topk_ask_price", &LimitOrderBook::get_topk_ask_price, py::arg("k"), py::arg("fill") = false)
-        .def("get_topk_bid_volume", &LimitOrderBook::get_topk_bid_volume, py::arg("k"), py::arg("fill") = false)
-        .def("get_topk_ask_volume", &LimitOrderBook::get_topk_ask_volume, py::arg("k"), py::arg("fill") = false)
+        .def("get_topk_bid_price", &LimitOrderBook::get_topk_bid_price,
+             py::arg("k"), py::arg("fill") = false)
+        .def("get_topk_ask_price", &LimitOrderBook::get_topk_ask_price,
+             py::arg("k"), py::arg("fill") = false)
+        .def("get_topk_bid_volume", &LimitOrderBook::get_topk_bid_volume,
+             py::arg("k"), py::arg("fill") = false)
+        .def("get_topk_ask_volume", &LimitOrderBook::get_topk_ask_volume,
+             py::arg("k"), py::arg("fill") = false)
         .def("get_kth_bid_price", &LimitOrderBook::get_kth_bid_price, py::arg("k"))
         .def("get_kth_ask_price", &LimitOrderBook::get_kth_ask_price, py::arg("k"))
         .def("get_kth_bid_volume", &LimitOrderBook::get_kth_bid_volume, py::arg("k"))

@@ -70,7 +70,8 @@ public:
         if (headers.size() > 0)
             print_header<Stream>(stream);
 
-        for (size_t i = 0, j = 0; i < data.size(); ++i)
+        size_t i, j;
+        for (i = 0, j = 0; i < data.size(); ++i)
         {
             while (j < special_lines.size() && i == special_lines[j].first)
                 stream << special_lines[j++].second << std::endl;
@@ -80,6 +81,8 @@ public:
                                      data[i]);
             stream << std::endl;
         }
+        while (j < special_lines.size() && i == special_lines[j].first)
+            stream << special_lines[j++].second << std::endl;
         stream << line("└", "┘", "┴", "─") << std::endl;
     }
 

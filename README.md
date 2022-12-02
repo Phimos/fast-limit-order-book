@@ -20,51 +20,54 @@ python setup.py install
 
 ## Usage
 
+you can use this project as a python package, to display the details of the order book:
+
 ```python
 import flob
 from flob import LimitOrderBook, Quote
 
 lob = LimitOrderBook()
-lob.write(Quote(12, 1186, 100, 1664529300000000000, flob.Bid, flob.LimitOrder))
-lob.show()
+lob.write(Quote(12, 1186, 300, 1664529300000000000, flob.Bid, flob.LimitOrder))
+lob.write(Quote(13, 1187, 100, 1664529500000000000, flob.Bid, flob.LimitOrder))
+lob.write(Quote(15, 1187, 200, 1664531500000000000, flob.Ask, flob.LimitOrder))
+lob.show(n=1)
 ```
 
-Output
-
-```bash
-┌────────────────────┬────────────────────┬────────────────────┐
-│     Timestamp      │       Price        │      Quantity      │
-╞════════════════════╪════════════════════╪════════════════════╡
-│        11:29:47.110│               11.91│                 200│
-│        11:29:47.110│               11.91│                1100│
-│        11:29:50.480│               11.90│                 300│
-│        11:29:53.350│               11.91│                1000│
-│        11:29:53.350│               11.91│                1000│
-│        11:29:53.350│               11.91│                2600│
-│        11:29:53.350│               11.91│                 200│
-│        11:29:53.350│               11.91│                1000│
-│        11:29:53.350│               11.91│                1000│
-│        11:29:53.350│               11.91│                 200│
-└────────────────────┴────────────────────┴────────────────────┘
-```
-
+*Expected output:*
 ```bash
 ┌────────────────────┬────────────────────┐
 │       Price        │      Quantity      │
 ╞════════════════════╪════════════════════╡
-│               11.95│              316600│
-│               11.94│              191200│
-│               11.93│              158600│
-│               11.92│               93400│
-│               11.91│               11000│
+│               11.87│                 100│
 ├────────────────────┼────────────────────┤
 ├────────────────────┼────────────────────┤
-│               11.90│               95334│
-│               11.89│              316400│
-│               11.88│              289300│
-│               11.87│              281535│
-│               11.86│              171600│
+│               11.86│                 300│
 └────────────────────┴────────────────────┘
+```
+
+you can also see the list of transactions:
+
+```python
+lob.show_transactions()
+```
+
+*Expected output:*
+```bash
+┌────────────────────┬────────────────────┬────────────────────┐
+│     Timestamp      │       Price        │      Quantity      │
+╞════════════════════╪════════════════════╪════════════════════╡
+│        09:51:40.000│               11.87│                 100│
+└────────────────────┴────────────────────┴────────────────────┘
+```
+
+there are example scripts in the `example` folder. it can be used to generate transactions and tick data in any frequency.
+
+```bash
+python example/transaction.py
+```
+
+```bash
+python example/tick.py
 ```
 
 **Note**: this project is still under development, so the API is not stable.
