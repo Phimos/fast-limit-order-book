@@ -71,7 +71,7 @@ public:
           ask_best_limit(nullptr),
           open(0), high(0), low(0), close(0), volume(0), amount(0),
           topk(topk),
-          start_of_day(0), snapshot_gap(0) {}
+          start_of_day(0), snapshot_gap(snapshot_gap) {}
     void clear();
     void write(const Quote &quote);
     void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price = 0, uint64_t timestamp = 0);
