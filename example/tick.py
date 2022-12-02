@@ -33,19 +33,24 @@ lob.set_schedule(schedule)
 lob.set_snapshot_gap(pd.Timedelta("00:00:03").value)
 lob.run()
 
-transactions = lob.get_transactions()
-print(len(transactions))
-transactions = [
+ticks = lob.get_ticks()
+ticks = [
     {
         "timestamp": item.timestamp,
-        "bid_uid": item.bid_uid,
-        "ask_uid": item.ask_uid,
-        "price": item.price,
-        "volume": item.quantity,
+        "open": item.open,
+        "high": item.high,
+        "low": item.low,
+        "close": item.close,
+        "volume": item.volume,
+        "amount": item.amount,
+        **{f"bid_price_{i+1}": item.bid_prices[i] for i in range(5)},
+        **{f"ask_price_{i+1}": item.ask_prices[i] for i in range(5)},
+        **{f"bid_volume_{i+1}": item.bid_volumes[i] for i in range(5)},
+        **{f"ask_volume_{i+1}": item.ask_volumes[i] for i in range(5)},
     }
-    for item in transactions
+    for item in ticks
 ]
 
-transactions = pd.DataFrame(transactions)
-transactions.timestamp = pd.to_datetime(transactions.timestamp)
-print(transactions)
+ticks = pd.DataFrame(ticks)
+ticks.timestamp = pd.to_datetime(ticks.timestamp)
+print(ticks)

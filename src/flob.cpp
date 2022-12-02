@@ -57,12 +57,17 @@ PYBIND11_MODULE(flob, m)
         .def_readonly("timestamp", &Transaction::timestamp);
 
     py::class_<Tick>(m, "Tick")
+        .def_readonly("timestamp", &Tick::timestamp)
         .def_readonly("open", &Tick::open)
         .def_readonly("high", &Tick::high)
         .def_readonly("low", &Tick::low)
         .def_readonly("close", &Tick::close)
         .def_readonly("volume", &Tick::volume)
-        .def_readonly("amount", &Tick::amount);
+        .def_readonly("amount", &Tick::amount)
+        .def_readonly("bid_prices", &Tick::bid_prices)
+        .def_readonly("ask_prices", &Tick::ask_prices)
+        .def_readonly("bid_volumes", &Tick::bid_volumes)
+        .def_readonly("ask_volumes", &Tick::ask_volumes);
 
     py::enum_<QuoteType>(m, "QuoteType")
         .value("LimitOrder", QuoteType::LimitOrder)

@@ -501,7 +501,7 @@ void LimitOrderBook::run()
     {
         std::vector<TradingHour> tmp(schedule.begin(), schedule.end());
         schedule.clear();
-        for (auto &period : schedule)
+        for (auto &period : tmp)
         {
             if (std::get<0>(period) == TradingStatus::CallAuction)
             {
