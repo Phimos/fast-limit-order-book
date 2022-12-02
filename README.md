@@ -31,7 +31,8 @@ from flob import LimitOrderBook, Quote
 lob = LimitOrderBook(decimal_places=2)
 lob.write(Quote(12, 1186, 300, 1664529300000000000, flob.Bid, flob.LimitOrder))
 lob.write(Quote(13, 1187, 100, 1664529500000000000, flob.Bid, flob.LimitOrder))
-lob.write(Quote(15, 1187, 200, 1664531500000000000, flob.Ask, flob.LimitOrder))
+lob.write(Quote(14, 1188, 200, 1664530200000000000, flob.Bid, flob.LimitOrder))
+lob.write(Quote(15, 1187, 400, 1664531500000000000, flob.Ask, flob.LimitOrder))
 lob.show(n=1)
 ```
 
@@ -58,6 +59,7 @@ lob.show_transactions()
 ┌────────────────────┬────────────────────┬────────────────────┐
 │     Timestamp      │       Price        │      Quantity      │
 ╞════════════════════╪════════════════════╪════════════════════╡
+│        09:51:40.000│               11.88│                 200│
 │        09:51:40.000│               11.87│                 100│
 └────────────────────┴────────────────────┴────────────────────┘
 ```
