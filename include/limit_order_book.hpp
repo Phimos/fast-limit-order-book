@@ -42,6 +42,8 @@ class LimitOrderBook
     void write_best_price_order(const Quote &quote);
     void write_cancel_order(const Quote &quote);
     void write_fill_order(const Quote &quote);
+    void write_chinext_limit_order(const Quote &quote); // TODO: Support ChiNext Market
+    void write_chinext_cancel_order(const Quote &quote);
     void track_transaction(const Transaction &transaction);
 
     void on_period_start(TradingStatus status, uint64_t timestamp);
