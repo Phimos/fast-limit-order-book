@@ -26,6 +26,28 @@ const std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>> CHINA_A_SHARE_T
     {TradingStatus::CallAuction, 53820000000000UL, 54000000000000UL},
 };
 
+const std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>> HKEX_SECURITIES_FULL_DAY_TRADING_SCHEDULE = {
+    // Opening Call Auction: 09:00:00 - 09:30:00
+    {TradingStatus::CallAuction, 32400000000000UL, 34200000000000UL},
+    // Continuous Auction (Morning): 09:30:00 - 12:00:00
+    {TradingStatus::ContinuousTrading, 34200000000000UL, 43200000000000UL},
+    // Continuous Auction (Extended Morning): 12:00:00 - 13:00:00
+    {TradingStatus::ContinuousTrading, 43200000000000UL, 46800000000000UL},
+    // Continuous Auction (Afternoon): 13:00:00 - 16:00:00
+    {TradingStatus::ContinuousTrading, 46800000000000UL, 57600000000000UL},
+    // Closing Call Auction: 16:00:00 - 16:10:00
+    {TradingStatus::CallAuction, 57600000000000UL, 58200000000000UL},
+};
+
+const std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>> HKEX_SECURITIES_HALF_DAY_TRADING_SCHEDULE = {
+    // Opening Call Auction: 09:00:00 - 09:30:00
+    {TradingStatus::CallAuction, 32400000000000UL, 34200000000000UL},
+    // Continuous Auction (Morning): 09:30:00 - 12:00:00
+    {TradingStatus::ContinuousTrading, 34200000000000UL, 43200000000000UL},
+    // Closing Call Auction: 12:00:00 - 12:10:00
+    {TradingStatus::CallAuction, 43200000000000UL, 43800000000000UL},
+};
+
 class LimitOrderBook
 {
     typedef std::tuple<TradingStatus, uint64_t, uint64_t> TradingHour;
