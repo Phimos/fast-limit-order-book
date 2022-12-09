@@ -74,7 +74,8 @@ class LimitOrderBook
     inline uint64_t shift_timestamp(uint64_t timestamp) { return timestamp < nanoseconds_per_day ? timestamp + start_of_day : timestamp; }
 
 public:
-    LimitOrderBook(size_t decimal_places = 2, uint64_t snapshot_gap = 0, size_t topk = 5)
+    LimitOrderBook(size_t decimal_places = 2, uint64_t snapshot_gap = 0,
+                   size_t topk = 5, const std::string &schedule = "AShare")
         : decimal_places(decimal_places),
           scale_up(std::pow(10, decimal_places)),
           scale_down(1.0 / scale_up),
@@ -84,7 +85,11 @@ public:
           ask_best_limit(nullptr),
           open(0), high(0), low(0), close(0), volume(0), amount(0),
           topk(topk),
-          start_of_day(0), snapshot_gap(snapshot_gap) {}
+          start_of_day(0)
+    {
+        set_schedule(schedule);
+        set_snapshot_gap(snapshot_gap);
+    }
     void clear();
     void write(const Quote &quote);
     void trade(uint64_t ask_uid, uint64_t bid_uid, uint64_t quantity, uint64_t price = 0, uint64_t timestamp = 0);
