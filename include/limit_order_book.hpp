@@ -15,6 +15,17 @@
 #include <sstream>
 #include <fstream>
 
+const std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>> CHINA_A_SHARE_TRADING_SCHEDULE = {
+    // Opening Call Auction: 09:15:00 - 09:25:00
+    {TradingStatus::CallAuction, 33300000000000UL, 33900000000000UL},
+    // Continuous Auction (Morning): 09:30:00 - 11:30:00
+    {TradingStatus::ContinuousTrading, 34200000000000UL, 41400000000000},
+    // Continuous Auction (Afternoon): 13:00:00 - 14:57:00
+    {TradingStatus::ContinuousTrading, 46800000000000UL, 53820000000000UL},
+    // Closing Call Auction: 14:57:00 - 15:00:00
+    {TradingStatus::CallAuction, 53820000000000UL, 54000000000000UL},
+};
+
 class LimitOrderBook
 {
     typedef std::tuple<TradingStatus, uint64_t, uint64_t> TradingHour;
@@ -81,6 +92,8 @@ public:
     void set_status(TradingStatus status) { this->status = status; }
     void set_status(const std::string &status);
     void set_schedule(const std::vector<TradingHour> &schedule) { this->schedule = schedule; }
+    void set_schedule(const std::string &schedule);
+
     void set_snapshot_gap(uint64_t snapshot_gap) { this->snapshot_gap = snapshot_gap; }
 
     void match(uint64_t ref_price = 0, uint64_t timestamp = 0);
@@ -137,6 +150,14 @@ void LimitOrderBook::on_period_end(TradingStatus status, uint64_t timestamp)
     default:
         break;
     }
+}
+
+void LimitOrderBook::set_schedule(const std::string &schedule)
+{
+    if (schedule == "AShare")
+        this->schedule = CHINA_A_SHARE_TRADING_SCHEDULE;
+    else
+        throw std::invalid_argument("Unknown trading schedule: " + schedule);
 }
 
 void LimitOrderBook::execute(std::tuple<TradingStatus, uint64_t, uint64_t> &period)

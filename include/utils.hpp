@@ -10,6 +10,12 @@
 #include <utility>
 #include <experimental/tuple>
 
+constexpr uint64_t nanoseconds_per_millisecond = 1000000UL;
+constexpr uint64_t nanoseconds_per_second = nanoseconds_per_millisecond * 1000UL;
+constexpr uint64_t nanoseconds_per_minute = nanoseconds_per_second * 60UL;
+constexpr uint64_t nanoseconds_per_hour = nanoseconds_per_minute * 60UL;
+constexpr uint64_t nanoseconds_per_day = nanoseconds_per_hour * 24UL;
+
 std::string strftime(uint64_t timestamp, const char *format = "%Y-%m-%d %H:%M:%S") // timestamp in ns
 {
     auto tp = std::chrono::time_point<std::chrono::system_clock, std::chrono::nanoseconds>(std::chrono::nanoseconds(timestamp));

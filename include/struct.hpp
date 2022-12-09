@@ -7,8 +7,6 @@
 #include "double_linked_list.hpp"
 #include "treap.hpp"
 
-constexpr uint64_t nanoseconds_per_day = 24UL * 60UL * 60UL * 1000000000UL;
-
 enum Side : bool
 {
     Bid = false,
