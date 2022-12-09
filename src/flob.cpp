@@ -19,7 +19,9 @@ PYBIND11_MODULE(flob, m)
         .def("write", &LimitOrderBook::write, py::arg("quote"))
         .def("set_status", py::overload_cast<TradingStatus>(&LimitOrderBook::set_status), py::arg("status"))
         .def("set_status", py::overload_cast<const std::string &>(&LimitOrderBook::set_status), py::arg("status"))
-        .def("set_schedule", py::overload_cast<const std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>> &>(&LimitOrderBook::set_schedule), py::arg("schedule"))
+        .def("set_schedule",
+             py::overload_cast<const std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>> &>(&LimitOrderBook::set_schedule),
+             py::arg("schedule"))
         .def("set_schedule", py::overload_cast<const std::string &>(&LimitOrderBook::set_schedule), py::arg("schedule"))
         .def("set_snapshot_gap", &LimitOrderBook::set_snapshot_gap, py::arg("snapshot_gap"))
         .def("load", &LimitOrderBook::load, py::arg("filename"), py::arg("header") = true)
