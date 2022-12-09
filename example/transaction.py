@@ -1,49 +1,38 @@
+import argparse
+
 import pandas as pd
 
-import flob
 from flob import LimitOrderBook
 
-schedule = [
-    (
-        flob.TradingStatus.CallAuction,
-        pd.Timedelta("09:15:00").value,
-        pd.Timedelta("09:25:00").value,
-    ),
-    (
-        flob.TradingStatus.ContinuousTrading,
-        pd.Timedelta("09:30:00").value,
-        pd.Timedelta("11:30:00").value,
-    ),
-    (
-        flob.TradingStatus.ContinuousTrading,
-        pd.Timedelta("13:00:00").value,
-        pd.Timedelta("14:57:00").value,
-    ),
-    (
-        flob.TradingStatus.CallAuction,
-        pd.Timedelta("14:57:00").value,
-        pd.Timedelta("15:00:00").value,
-    ),
-]
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", type=str, default="data/sample.csv")
+    parser.add_argument("--schedule", type=str, default="AShare")
+    parser.add_argument("--output", type=str, default="data/transactions.csv")
+    return parser.parse_args()
 
 
-lob = LimitOrderBook()
-lob.load("data/sample.csv")
-lob.set_schedule(schedule)
-lob.run()
+if __name__ == "__main__":
+    args = parse_args()
 
-transactions = lob.get_transactions()
-transactions = [
-    {
-        "timestamp": item.timestamp,
-        "bid_uid": item.bid_uid,
-        "ask_uid": item.ask_uid,
-        "price": item.price,
-        "volume": item.quantity,
-    }
-    for item in transactions
-]
+    lob = LimitOrderBook(schedule=args.schedule)
+    lob.load(args.data)
+    lob.run()
 
-transactions = pd.DataFrame(transactions)
-transactions.timestamp = pd.to_datetime(transactions.timestamp)
-print(transactions)
+    transactions = lob.get_transactions()
+    transactions = [
+        {
+            "timestamp": item.timestamp,
+            "bid_uid": item.bid_uid,
+            "ask_uid": item.ask_uid,
+            "price": item.price,
+            "volume": item.quantity,
+        }
+        for item in transactions
+    ]
+
+    transactions = pd.DataFrame(transactions)
+    transactions.timestamp = pd.to_datetime(transactions.timestamp)
+    transactions = transactions.round({"price": 2})
+    transactions.to_csv(args.output, index=False)

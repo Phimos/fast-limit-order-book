@@ -149,11 +149,19 @@ lob.show_transactions()
 there are example scripts in the `example` folder. it can be used to generate transactions and tick data in any frequency.
 
 ```bash
-python example/transaction.py
+python example/transaction.py    \
+    --data data/sample.csv       \
+    --schedule AShare            \
+    --output data/transactions.csv
 ```
 
 ```bash
-python example/tick.py
+python example/tick.py        \
+    --data data/sample.csv    \
+    --schedule AShare         \
+    --snapshot_gap 3s         \
+    --topk 5                  \
+    --output data/ticks.csv
 ```
 
 **Note**: this project is still under development, so the API is not stable.
