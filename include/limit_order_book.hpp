@@ -139,12 +139,12 @@ void LimitOrderBook::on_period_end(TradingStatus status, uint64_t timestamp)
                            low == 0 ? std::nan("") : int2double(low),
                            close == 0 ? std::nan("") : int2double(close),
                            volume,
-                           amount == 0 ? std::nan("") : int2double(amount),
+                           amount,
                            get_topk_bid_price(topk, true),
                            get_topk_ask_price(topk, true),
                            get_topk_bid_volume(topk, true),
                            get_topk_ask_volume(topk, true));
-        open = high = low = close = volume = amount = 0;
+        open = high = low = volume = amount = 0;
         break;
 
     default:
