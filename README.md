@@ -164,4 +164,6 @@ python example/tick.py        \
     --output data/ticks.csv
 ```
 
-**Note**: this project is still under development, so the API is not stable.
+**Note**: 
+* this project is still under development, so the API is not stable.
+* I will very grateful if you can provide the data of Hong Kong/US stocks
