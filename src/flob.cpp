@@ -6,12 +6,11 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(flob, m)
-{
+PYBIND11_MODULE(flob, m) {
     m.doc() = "fast-limit-order-book";
 
     py::class_<LimitOrderBook>(m, "LimitOrderBook")
-        .def(py::init<size_t, uint64_t, size_t, const std::string &>(),
+        .def(py::init<size_t, uint64_t, size_t, const std::string&>(),
              py::arg("decimal_places") = 2,
              py::arg("snapshot_gap") = 0,
              py::arg("topk") = 5,
@@ -19,11 +18,11 @@ PYBIND11_MODULE(flob, m)
         .def("clear", &LimitOrderBook::clear)
         .def("write", &LimitOrderBook::write, py::arg("quote"))
         .def("set_status", py::overload_cast<TradingStatus>(&LimitOrderBook::set_status), py::arg("status"))
-        .def("set_status", py::overload_cast<const std::string &>(&LimitOrderBook::set_status), py::arg("status"))
+        .def("set_status", py::overload_cast<const std::string&>(&LimitOrderBook::set_status), py::arg("status"))
         .def("set_schedule",
-             py::overload_cast<const std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>> &>(&LimitOrderBook::set_schedule),
+             py::overload_cast<const std::vector<std::tuple<TradingStatus, uint64_t, uint64_t>>&>(&LimitOrderBook::set_schedule),
              py::arg("schedule"))
-        .def("set_schedule", py::overload_cast<const std::string &>(&LimitOrderBook::set_schedule), py::arg("schedule"))
+        .def("set_schedule", py::overload_cast<const std::string&>(&LimitOrderBook::set_schedule), py::arg("schedule"))
         .def("set_snapshot_gap", &LimitOrderBook::set_snapshot_gap, py::arg("snapshot_gap"))
         .def("load", &LimitOrderBook::load, py::arg("filename"), py::arg("header") = true)
         .def("until", &LimitOrderBook::until, py::arg("timestamp"))

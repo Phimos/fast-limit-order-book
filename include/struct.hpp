@@ -1,22 +1,20 @@
 #ifndef __STRUCT_HPP__
 #define __STRUCT_HPP__
 
-#include <string>
-#include <memory>
 #include <map>
+#include <memory>
+#include <string>
 #include "double_linked_list.hpp"
 #include "treap.hpp"
 
-enum Side : bool
-{
+enum Side : bool {
     Bid = false,
     Ask = true
 };
 
 struct Limit;
 
-struct Order
-{
+struct Order {
     const uint64_t uid;
     const uint64_t price;
     uint64_t quantity;
@@ -27,33 +25,30 @@ struct Order
         : uid(uid), price(price), quantity(quantity), timestamp(timestamp) {}
 };
 
-struct Limit : public std::enable_shared_from_this<Limit>
-{
+struct Limit : public std::enable_shared_from_this<Limit> {
     const Side side;
     const uint64_t price;
     uint64_t quantity;
     DoubleLinkedList<std::shared_ptr<Order>> orders;
 
-    Limit(uint64_t price, Side side) : side(side), price(price), quantity(0) {}
-    bool operator<(const Limit &other) const { return std::make_pair(side, price) < std::make_pair(other.side, other.price); }
-    bool operator==(const Limit &other) const { return std::make_pair(side, price) == std::make_pair(other.side, other.price); }
-    bool operator>(const Limit &other) const { return std::make_pair(side, price) > std::make_pair(other.side, other.price); }
-    void insert(std::shared_ptr<Order> &order)
-    {
+    Limit(uint64_t price, Side side)
+        : side(side), price(price), quantity(0) {}
+    bool operator<(const Limit& other) const { return std::make_pair(side, price) < std::make_pair(other.side, other.price); }
+    bool operator==(const Limit& other) const { return std::make_pair(side, price) == std::make_pair(other.side, other.price); }
+    bool operator>(const Limit& other) const { return std::make_pair(side, price) > std::make_pair(other.side, other.price); }
+    void insert(std::shared_ptr<Order>& order) {
         orders.push_back(order);
         quantity += order->quantity;
         order->limit = weak_from_this();
     }
-    friend std::ostream &operator<<(std::ostream &os, const Limit &limit)
-    {
+    friend std::ostream& operator<<(std::ostream& os, const Limit& limit) {
         os << "Limit(" << (limit.side == Bid ? "Bid" : "Ask") << ", " << limit.price << ", " << limit.quantity << ")";
         return os;
     }
 };
 
 template <>
-struct Node<Limit> : std::enable_shared_from_this<Node<Limit>>
-{
+struct Node<Limit> : std::enable_shared_from_this<Node<Limit>> {
     std::shared_ptr<Limit> value_ptr;
     size_t size;
     size_t priority;
@@ -62,46 +57,37 @@ struct Node<Limit> : std::enable_shared_from_this<Node<Limit>>
     std::weak_ptr<Node<Limit>> parent;
 
     Node(std::shared_ptr<Limit> value_ptr)
-        : value_ptr(value_ptr), size(1), priority(rand()),
-          sum_quantity(0), count_orders(0) {}
+        : value_ptr(value_ptr), size(1), priority(rand()), sum_quantity(0), count_orders(0) {}
     Node(Limit value)
-        : value_ptr(std::make_shared<Limit>(value)), size(1), priority(rand()),
-          sum_quantity(0), count_orders(0) {}
-    void update()
-    {
+        : value_ptr(std::make_shared<Limit>(value)), size(1), priority(rand()), sum_quantity(0), count_orders(0) {}
+    void update() {
         size = 1;
         sum_quantity = value_ptr->quantity;
         count_orders = value_ptr->orders.size;
-        if (left)
-        {
+        if (left) {
             size += left->size;
             sum_quantity += left->sum_quantity;
             count_orders += left->count_orders;
         }
-        if (right)
-        {
+        if (right) {
             size += right->size;
             sum_quantity += right->sum_quantity;
             count_orders += right->count_orders;
         }
     }
-    Limit &value() { return *value_ptr; }
+    Limit& value() { return *value_ptr; }
     std::shared_ptr<Node<Limit>> prev();
     std::shared_ptr<Node<Limit>> next();
 };
 
-std::shared_ptr<Node<Limit>> Node<Limit>::prev()
-{
+std::shared_ptr<Node<Limit>> Node<Limit>::prev() {
     std::shared_ptr<Node<Limit>> node;
-    if (left)
-    {
+    if (left) {
         node = left;
         while (node->right)
             node = node->right;
         return node;
-    }
-    else
-    {
+    } else {
         node = this->shared_from_this();
         while (node->parent.lock() && node->parent.lock()->left == node)
             node = node->parent.lock();
@@ -109,18 +95,14 @@ std::shared_ptr<Node<Limit>> Node<Limit>::prev()
     }
 }
 
-std::shared_ptr<Node<Limit>> Node<Limit>::next()
-{
+std::shared_ptr<Node<Limit>> Node<Limit>::next() {
     std::shared_ptr<Node<Limit>> node;
-    if (right)
-    {
+    if (right) {
         node = right;
         while (node->left)
             node = node->left;
         return node;
-    }
-    else
-    {
+    } else {
         node = this->shared_from_this();
         while (node->parent.lock() && node->parent.lock()->right == node)
             node = node->parent.lock();
@@ -128,8 +110,7 @@ std::shared_ptr<Node<Limit>> Node<Limit>::next()
     }
 }
 
-enum QuoteType
-{
+enum QuoteType {
     LimitOrder,
     MarketOrder,
     BestPriceOrder,
@@ -137,8 +118,7 @@ enum QuoteType
     FillOrder
 };
 
-struct Quote
-{
+struct Quote {
     const uint64_t uid;
     const uint64_t price;
     const uint64_t quantity;
@@ -150,16 +130,14 @@ struct Quote
         : uid(uid), price(price), quantity(quantity), timestamp(timestamp), side(side), type(type) {}
 };
 
-enum TradingStatus
-{
+enum TradingStatus {
     CallAuction,
     ContinuousTrading,
     Closed,
     Snapshot
 };
 
-struct Transaction
-{
+struct Transaction {
     const uint64_t bid_uid, ask_uid;
     const uint64_t price, quantity;
     const uint64_t timestamp;
@@ -168,19 +146,15 @@ struct Transaction
         : bid_uid(bid_uid), ask_uid(ask_uid), price(price), quantity(quantity), timestamp(timestamp), real_price(real_price) {}
 };
 
-struct Tick
-{
+struct Tick {
     const uint64_t timestamp;
     const double open, high, low, close;
     const uint64_t volume;
     const double amount;
     const std::vector<double> bid_prices, ask_prices;
     const std::vector<uint64_t> bid_volumes, ask_volumes;
-    Tick(uint64_t timestamp, double open, double high, double low, double close, uint64_t volume, double amount,
-         const std::vector<double> &bid_prices, const std::vector<double> &ask_prices,
-         const std::vector<uint64_t> &bid_volumes, const std::vector<uint64_t> &ask_volumes)
-        : timestamp(timestamp), open(open), high(high), low(low), close(close), volume(volume), amount(amount),
-          bid_prices(bid_prices), ask_prices(ask_prices), bid_volumes(bid_volumes), ask_volumes(ask_volumes) {}
+    Tick(uint64_t timestamp, double open, double high, double low, double close, uint64_t volume, double amount, const std::vector<double>& bid_prices, const std::vector<double>& ask_prices, const std::vector<uint64_t>& bid_volumes, const std::vector<uint64_t>& ask_volumes)
+        : timestamp(timestamp), open(open), high(high), low(low), close(close), volume(volume), amount(amount), bid_prices(bid_prices), ask_prices(ask_prices), bid_volumes(bid_volumes), ask_volumes(ask_volumes) {}
 };
 
-#endif // __STRUCT_HPP__
+#endif  // __STRUCT_HPP__
