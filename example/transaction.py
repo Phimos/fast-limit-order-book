@@ -1,7 +1,6 @@
 import argparse
 
 import pandas as pd
-
 from flob import LimitOrderBook
 
 
