@@ -341,6 +341,8 @@ void LimitOrderBook::write_cancel_order(const Quote& quote) {
     assert(quote.type == QuoteType::CancelOrder);
     auto& limits = quote.side == Side::Bid ? bid_limits : ask_limits;
     auto& price_map = quote.side == Side::Bid ? bid_price_map : ask_price_map;
+    if (uid_order_map.find(quote.uid) == uid_order_map.end())
+        throw std::runtime_error("trying to cancel non-existing order: " + std::to_string(quote.uid));
     auto order = uid_order_map[quote.uid];
     auto limit = order->limit.lock();
     assert(limit);
