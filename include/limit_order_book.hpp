@@ -422,11 +422,13 @@ void LimitOrderBook::match_call_auction(uint64_t timestamp)  // TODO: auto parse
     while (ask_node && bid_node && (ask_node->value().price <= ref_price || ref_price <= bid_node->value().price)) {
         if (ask_cum_quantity < bid_cum_quantity) {
             ask_cum_quantity += ask_node->value().quantity;
-            ref_price = ask_node->value().price;
+            if (ask_cum_quantity > bid_cum_quantity)
+                ref_price = ask_node->value().price;
             ask_node = ask_node->next();
         } else {
             bid_cum_quantity += bid_node->value().quantity;
-            ref_price = bid_node->value().price;
+            if (bid_cum_quantity > ask_cum_quantity)
+                ref_price = bid_node->value().price;
             bid_node = bid_node->prev();
         }
     }
