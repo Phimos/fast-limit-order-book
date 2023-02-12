@@ -434,6 +434,12 @@ void LimitOrderBook::match_call_auction(uint64_t timestamp)  // TODO: auto parse
     }
     if (ref_price == 0)
         return;
+    if (ask_cum_quantity == bid_cum_quantity) {
+        ask_node = ask_node->prev();
+        bid_node = bid_node->next();
+        ref_price = ask_node->value().price + bid_node->value().price;
+        ref_price = (ref_price >> 1) + ((ref_price & 2) ? (ref_price & 1) : 0);
+    }
     match(ref_price, timestamp);
 }
 
